@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:klektion/screens/base_screen.dart';
 import '../../../../controllers/auth_controller.dart';
 import '../../../../utils/color_constants.dart';
 import '../../../../utils/validators.dart';
@@ -64,7 +65,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     if (success) {
-      Get.offAll(() => const AddVendorScreen());
+      Get.offAll(() => const BaseScreen());
     } else {
       _showErrorSnackBar(
         authController.errorMessage ?? AppConstants.genericErrorMessage,

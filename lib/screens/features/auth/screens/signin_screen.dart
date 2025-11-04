@@ -48,12 +48,7 @@ class _SignInScreenState extends State<SignInScreen> {
         return;
       }
 
-      final vendorExists = await authController.checkVendorExists(user.userId);
-      if (vendorExists) {
-        Get.offAllNamed(AppRoutes.home);
-      } else {
-        Get.offAll(() => const AddVendorScreen());
-      }
+      Get.offAllNamed(AppRoutes.home);
     } else {
       _showErrorSnackBar(
         authController.errorMessage ?? AppConstants.genericErrorMessage,

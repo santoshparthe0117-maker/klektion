@@ -1,14 +1,15 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../collections/models/collection_model.dart';
 import '../models/items_model.dart';
 
-class ProductController extends GetxController {
+class ItemController extends GetxController {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  RxList<ProductModel> products = <ProductModel>[].obs;
-  RxList<ProductModel> filteredProducts = <ProductModel>[].obs;
+  RxList<ItemModel> itemList = <ItemModel>[].obs;
+  RxList<ItemModel> filteredItems = <ItemModel>[].obs;
 
   var isLoading = false.obs;
   var categories = [].obs;
@@ -17,12 +18,12 @@ class ProductController extends GetxController {
   var selectedSubCategory;
   var imageFiles = <Uint8List>[].obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    fetchProducts();
-    fetchCategories();
-  }
+  // @override
+  // void onInit() {
+  //   super.onInit();
+  //   getItemsByUser();
+  //   fetchCategories();
+  // }
 
   void fetchCategories() async {
     try {
@@ -51,83 +52,118 @@ class ProductController extends GetxController {
     }
   }
 
-  Future<void> fetchProducts() async {
+  Future<void> getItemsByUser() async {
     try {
       isLoading.value = true;
 
-      final vendorId = supabase.auth.currentUser?.id;
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        print("⚠️ No logged-in user");
+        return;
+      }
+
       final response = await supabase
-          .from('products')
-          .select()
-          .eq('vendor_id', vendorId!);
+          .from('items')
+          .select('*, item_images(image_url)')
+          .eq('user_id', userId)
+          .eq('is_deleted', false)
+          .order('created_at', ascending: false);
 
-      products.value = (response as List<dynamic>)
-          .map((item) => ProductModel.fromJson(item))
-          .toList();
+      final data = response as List<dynamic>;
 
-      filteredProducts.assignAll(products);
+      itemList.value = data.map((e) => ItemModel.fromJson(e)).toList();
+      filteredItems.value = [...itemList]; // copy list
     } catch (e) {
-      Get.snackbar('Error', 'Failed to fetch products: $e');
+      print('❌ Error fetching items: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  void deleteProduct(String id) {
-    products.removeWhere((p) => p.productId == id);
-    filteredProducts.removeWhere((p) => p.productId == id);
-  }
-
-  // ✅ Upload image to Supabase Storage
-  Future<String?> uploadImage(Uint8List bytes, String fileName) async {
-    try {
-      final path = 'products/$fileName';
-      await supabase.storage
-          .from('product_images')
-          .uploadBinary(
-            path,
-            bytes,
-            fileOptions: const FileOptions(contentType: 'image/png'),
-          );
-      return supabase.storage.from('product_images').getPublicUrl(path);
-    } catch (e) {
-      Get.snackbar('Error', 'Image upload failed: $e');
-      return null;
-    }
+  void deleteItems(String id) {
+    itemList.removeWhere((p) => p.itemId == id);
+    filteredItems.removeWhere((p) => p.itemId == id);
   }
 
   // ✅ Add product
-  Future<bool> addProduct(AddProductModel product) async {
+  RxList<File> images = <File>[].obs;
+  final picker = ImagePicker();
+
+  Future pickImage() async {
+    if (images.length >= 4) return;
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      images.add(File(picked.path));
+    }
+  }
+
+  Future<String> uploadImage(String itemId, File file) async {
+    final fileName = "$itemId-${DateTime.now().millisecondsSinceEpoch}.jpg";
+    final path = 'items/$fileName';
+
+    await supabase.storage.from('item_images').upload(path, file);
+
+    return supabase.storage.from('item_images').getPublicUrl(path);
+  }
+
+  Future<bool> addItem({
+    required String name,
+    required String collectionId,
+    required String? categoryId,
+    required double? purchasePrice,
+    required double? estimatedValue,
+    required String description,
+    required String visibility, // private / public
+    DateTime? acquisitionDate,
+    String? condition,
+  }) async {
     try {
       isLoading.value = true;
 
-      final response = await supabase.from('products').insert({
-        'vendor_id': supabase.auth.currentUser?.id,
-        'product_category_id': int.parse(product.categoryId),
-        'product_name': product.productName,
-        'product_description': product.description,
-        'product_price': product.sellingPrice,
-        'discount_amount': product.sellingPrice,
-        'discounted_price': product.sellingPrice,
-        'stock': product.stockQuantity,
-        'is_active': true,
+      // ✅ Get current logged-in user ID
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        print("⚠️ User not logged in");
+        return false;
+      }
+
+      final itemData = {
+        'user_id': userId, // ✅ added here
+        'collection_id': collectionId,
+        'category_id': categoryId,
+        'name': name,
+        'description': description,
+        'purchase_price': purchasePrice,
+        'estimated_value': estimatedValue,
+        'acquisition_date': acquisitionDate?.toIso8601String(),
+        'condition': condition,
+        'visibility': visibility,
         'is_deleted': false,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
-      }).select();
+      };
 
-      if (response.isNotEmpty) {
-        final newProduct = ProductModel.fromJson(response.first);
-        products.insert(0, newProduct);
-        filteredProducts.insert(0, newProduct);
+      // ✅ Insert & get returned row
+      final inserted = await supabase
+          .from('items')
+          .insert(itemData)
+          .select()
+          .single();
 
-        return true; // ✅ Success
-      } else {
-        Get.snackbar('⚠️ Failed', 'Could not add product.');
-        return false; // ❌ Failure
+      final String itemId = inserted['item_id'];
+
+      // ✅ Upload images and insert into item_images table
+      for (var file in images) {
+        final url = await uploadImage(itemId, file);
+        await supabase.from('item_images').insert({
+          'item_id': itemId,
+          'image_url': url,
+        });
       }
+
+      return true;
     } catch (e) {
-      Get.snackbar('❌ Error', e.toString());
+      print("Add item error: $e");
       return false;
     } finally {
       isLoading.value = false;

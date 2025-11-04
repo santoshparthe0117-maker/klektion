@@ -1,447 +1,270 @@
-import 'dart:math';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:klektion/utils/color_constants.dart';
+
 import '../../../../controllers/auth_controller.dart';
-import '../../../../routes/app_routes.dart';
-import '../../../../utils/color_constants.dart';
-import 'vendor_qr_screen.dart';
 
-class ProfileTabScreen extends StatefulWidget {
-  const ProfileTabScreen({super.key});
+class ProfileScreen extends StatelessWidget {
+  final authController = Get.find<AuthController>();
 
-  @override
-  State<ProfileTabScreen> createState() => _ProfileTabScreenState();
-}
-
-class _ProfileTabScreenState extends State<ProfileTabScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _waveController;
-  late AnimationController _orbController;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _waveController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 6),
-    )..repeat(reverse: true);
-
-    _orbController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 12),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _waveController.dispose();
-    _orbController.dispose();
-    super.dispose();
-  }
+  ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = authController.user;
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
+
+    double hPad = isTablet ? 24 : 16;
+    double avatarSize = isTablet ? 90 : 70;
+    double titleSize = isTablet ? 26 : 20;
+    double subtitleSize = isTablet ? 15 : 13;
+    double statCardSize = (size.width - (hPad * 2) - (isTablet ? 40 : 24)) / 3;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: GetX<AuthController>(
-        builder: (authController) {
-          final user = authController.user;
-
-          return Stack(
-            children: [
-              /// 🌈 Animated Gradient Background
-              AnimatedBuilder(
-                animation: _waveController,
-                builder: (context, _) {
-                  return Container(
-                    height: 280,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color.lerp(
-                            const Color(0xFF2E7D32),
-                            const Color(0xFF1B5E20),
-                            sin(_waveController.value * pi),
-                          )!,
-                          Color.lerp(
-                            const Color(0xFF66BB6A),
-                            const Color(0xFF43A047),
-                            cos(_waveController.value * pi),
-                          )!,
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              /// ✨ Floating Orbs Animation
-              AnimatedBuilder(
-                animation: _orbController,
-                builder: (context, _) {
-                  double t = _orbController.value;
-                  return Stack(
-                    children: [
-                      _buildOrb(
-                        top: 80 + sin(t * 2 * pi) * 15,
-                        left: 40 + cos(t * 2 * pi) * 20,
-                        size: 100,
-                        color: Colors.white.withOpacity(0.08),
-                      ),
-                      _buildOrb(
-                        top: 180 + cos(t * 2 * pi) * 25,
-                        right: 60 + sin(t * 2 * pi) * 30,
-                        size: 140,
-                        color: Colors.white.withOpacity(0.05),
-                      ),
-                      _buildOrb(
-                        top: 40 + sin(t * 2 * pi) * 10,
-                        right: 10,
-                        size: 80,
-                        color: Colors.white.withOpacity(0.1),
-                      ),
-                    ],
-                  );
-                },
-              ),
-
-              /// 🌊 Animated Wave Shape Overlay
-              AnimatedBuilder(
-                animation: _waveController,
-                builder: (context, _) {
-                  return CustomPaint(
-                    size: const Size(double.infinity, 300),
-                    painter: _WavePainter(offset: _waveController.value * 100),
-                  );
-                },
-              ),
-
-              /// 💎 Glass Blur Layer for Depth
-              Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-
-              /// ✨ Glow Highlight
-              Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withOpacity(0.25),
-                        Colors.transparent,
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-              ),
-              // Profile content
-              SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 60),
-
-                    // Profile Card (floating)
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(top: 30),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 12,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: 45,
-                            backgroundColor: AppColors.primaryColor,
-                            child: Text(
-                              user?.name.substring(0, 1).toUpperCase() ?? 'U',
-                              style: GoogleFonts.poppins(
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            user?.name ?? 'User',
-                            style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[800],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '+91 ${user?.mobile ?? ''}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          if (user?.email != null) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              user!.email,
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Profile Options
-                    _buildProfileOption(
-                      icon: Icons.edit_outlined,
-                      title: 'Edit Profile',
-                      color: AppColors.primaryColor,
-                      onTap: () {
-                        // TODO
-                      },
-                    ),
-                    _buildProfileOption(
-                      icon: Icons.qr_code,
-                      title: 'QR code ',
-                      color: AppColors.primaryColor,
-                      onTap: () {
-                        Get.to(VendorQrScreen());
-                      },
-                    ),
-                    // _buildProfileOption(
-                    //   icon: Icons.payment_outlined,
-                    //   title: 'Payment Methods',
-                    //   color: AppColors.primaryColor,
-                    //   onTap: () {},
-                    // ),
-                    _buildProfileOption(
-                      icon: Icons.help_outline,
-                      title: 'Help & Support',
-                      color: AppColors.primaryColor,
-                      onTap: () {},
-                    ),
-                    _buildProfileOption(
-                      icon: Icons.info_outline,
-                      title: 'About',
-                      color: AppColors.primaryColor,
-                      onTap: () {},
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Sign Out Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: () =>
-                            _showSignOutDialog(context, authController),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 4,
-                        ),
-                        child: Text(
-                          'Sign Out',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildCircle(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-    );
-  }
-
-  Widget _buildOrb({
-    double? top,
-    double? left,
-    double? right,
-    required double size,
-    required Color color,
-  }) {
-    return Positioned(
-      top: top,
-      left: left,
-      right: right,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-      ),
-    );
-  }
-
-  Widget _buildProfileOption({
-    required IconData icon,
-    required String title,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      backgroundColor: const Color(0xFF0E1A1A),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          "Profile",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isTablet ? 24 : 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.settings, color: Colors.white),
+            iconSize: isTablet ? 30 : 22,
           ),
         ],
       ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.15),
-          child: Icon(icon, color: color),
+
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(hPad),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: goldGradient,
+                borderRadius: BorderRadius.circular(isTablet ? 20 : 14),
+              ),
+              padding: EdgeInsets.all(isTablet ? 20 : 14),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: avatarSize / 2,
+                    backgroundImage: NetworkImage(
+                      "https://avatars.githubusercontent.com/u/583231?v=4",
+                    ),
+                  ),
+                  SizedBox(width: isTablet ? 16 : 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.name ?? "Collector",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: titleSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        user?.email ?? "",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: subtitleSize,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 12 : 10,
+                          vertical: isTablet ? 6 : 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          "Premium Member",
+                          style: TextStyle(
+                            color: Colors.amber,
+                            fontSize: subtitleSize,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: isTablet ? 24 : 18),
+
+            // Stats Cards Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _statsCard("188", "Items", statCardSize, isTablet),
+                _statsCard("1.2k", "Followers", statCardSize, isTablet),
+                _statsCard("345", "Following", statCardSize, isTablet),
+              ],
+            ),
+
+            SizedBox(height: isTablet ? 28 : 20),
+            _sectionTitle("Privacy Controls", isTablet),
+            _toggleTile("Public Profile", isTablet),
+            _toggleTile("Show Item Values", isTablet),
+            _toggleTile("Allow Comments", isTablet),
+
+            SizedBox(height: isTablet ? 28 : 20),
+            _sectionTitle("Social Activity", isTablet),
+            _statLine(Icons.favorite, "Total Likes", "2,345", isTablet),
+            _statLine(Icons.comment, "Comments", "567", isTablet),
+            _statLine(Icons.share, "Shares", "123", isTablet),
+
+            SizedBox(height: isTablet ? 28 : 20),
+            _sectionTitle("Backup & Export", isTablet),
+            _button("Export to CSV", isTablet),
+            _button("Export to PDF", isTablet),
+            _button("Cloud Backup", isTablet),
+          ],
         ),
-        title: Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[800],
-          ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 16,
-          color: Colors.grey[400],
-        ),
-        onTap: onTap,
       ),
     );
   }
 
-  void _showSignOutDialog(BuildContext context, AuthController authController) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          title: Text(
-            'Sign Out',
-            style: GoogleFonts.poppins(
+  // ✅ Widgets Below
+
+  Widget _statsCard(String value, String title, double w, bool tab) {
+    return Container(
+      width: w,
+      padding: EdgeInsets.symmetric(vertical: tab ? 22 : 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B2A2B),
+        borderRadius: BorderRadius.circular(tab ? 16 : 12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: tab ? 22 : 18,
               fontWeight: FontWeight.bold,
-              color: Colors.redAccent,
             ),
           ),
-          content: Text(
-            'Are you sure you want to sign out?',
-            style: GoogleFonts.poppins(fontSize: 15, color: Colors.grey[700]),
+          Text(
+            title,
+            style: TextStyle(color: Colors.white70, fontSize: tab ? 16 : 13),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: Text(
-                'Cancel',
-                style: GoogleFonts.poppins(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Get.back(); // Close dialog
-                await authController.signOut();
-                Get.offAllNamed(AppRoutes.signIn);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text('Sign Out', style: GoogleFonts.poppins()),
-              ),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
-}
 
-class _WavePainter extends CustomPainter {
-  final double offset;
-
-  _WavePainter({this.offset = 0});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    path.moveTo(0, size.height * 0.9);
-    for (double i = 0; i <= size.width; i++) {
-      path.lineTo(i, size.height * 0.9 - 10 * sin((i + offset) * 0.02));
-    }
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-
-    canvas.drawPath(path, paint);
+  Widget _sectionTitle(String text, bool tab) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.amber,
+        fontSize: tab ? 20 : 17,
+        fontWeight: FontWeight.w600,
+      ),
+    );
   }
 
-  @override
-  bool shouldRepaint(_WavePainter oldDelegate) => oldDelegate.offset != offset;
+  Widget _collectionCard({
+    required String img,
+    required String title,
+    required String count,
+    required bool isPrivate,
+    required bool isTablet,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF122021),
+        borderRadius: BorderRadius.circular(isTablet ? 18 : 14),
+      ),
+      child: ListTile(
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.network(
+            img,
+            width: isTablet ? 70 : 55,
+            height: isTablet ? 70 : 55,
+            fit: BoxFit.cover,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isTablet ? 18 : 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          count,
+          style: TextStyle(color: Colors.white70, fontSize: isTablet ? 14 : 12),
+        ),
+        trailing: Icon(
+          isPrivate ? Icons.lock : Icons.visibility,
+          color: Colors.white70,
+          size: isTablet ? 26 : 20,
+        ),
+      ),
+    );
+  }
+
+  Widget _toggleTile(String label, bool isTablet) {
+    return SwitchListTile(
+      value: true,
+      onChanged: (value) {},
+      activeColor: Colors.amber,
+      title: Text(
+        label,
+        style: TextStyle(color: Colors.white, fontSize: isTablet ? 18 : 15),
+      ),
+    );
+  }
+
+  Widget _statLine(IconData icon, String name, String value, bool tab) {
+    return ListTile(
+      dense: !tab,
+      leading: Icon(icon, color: Colors.amber, size: tab ? 26 : 20),
+      title: Text(
+        name,
+        style: TextStyle(color: Colors.white, fontSize: tab ? 18 : 15),
+      ),
+      trailing: Text(
+        value,
+        style: TextStyle(color: Colors.white70, fontSize: tab ? 18 : 15),
+      ),
+    );
+  }
+
+  Widget _button(String text, bool tab) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      height: tab ? 55 : 45,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(tab ? 14 : 10),
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: TextStyle(color: Colors.white, fontSize: tab ? 18 : 15),
+        ),
+      ),
+    );
+  }
 }

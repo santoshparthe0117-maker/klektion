@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:klektion/screens/features/items/controllers/items_controller.dart';
 import '../utils/color_constants.dart';
 import 'features/account/screens/account_screen.dart';
 import 'features/home/screens/home_screen.dart' hide AppColors;
@@ -13,20 +15,29 @@ class BaseScreen extends StatefulWidget {
 }
 
 class _BaseScreenState extends State<BaseScreen> {
+  final ItemController itemController = Get.put(ItemController());
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
     HomeScreen(),
     OrdersTabScreen(),
-    ProductScreen(),
+    ItemsScreen(),
 
-    ProfileTabScreen(),
+    ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    itemController.getItemsByUser();
   }
 
   @override

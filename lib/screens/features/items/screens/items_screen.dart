@@ -4,70 +4,45 @@ import '../../../../utils/color_constants.dart';
 import '../controllers/items_controller.dart';
 import 'add_items_screen.dart';
 
-class ProductScreen extends StatelessWidget {
-  final ProductController controller = Get.put(ProductController());
+class ItemsScreen extends StatelessWidget {
+  final ItemController itemController = Get.put(ItemController());
   final TextEditingController searchController = TextEditingController();
 
-  ProductScreen({super.key});
+  ItemsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFF0E1A1A),
       appBar: AppBar(
-        title: const Text('Products', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        elevation: 0.8,
-        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text('My Items', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF0E1A1A),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
+
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.accent,
+        onPressed: () => Get.to(() => AddItemScreen()),
+        child: const Icon(Icons.add, color: Colors.black),
+      ),
+
       body: Column(
         children: [
-          // 🔹 Add New Product Button
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: InkWell(
-                onTap: () {
-                  Get.to(AddProductScreen());
-                },
-                child: Container(
-                  padding: EdgeInsets.all(15),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: greenGradient,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.add_circle_outline, color: Colors.white),
-                      const Text(
-                        'Add New Product',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
           // 🔹 Search Bar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: TextField(
               controller: searchController,
-              onChanged: (value) => controller.filteredProducts,
+              onChanged: (value) => itemController.filteredItems,
+              style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: Colors.green),
-                hintText: 'Search products...',
+                hintText: "Search items...",
+                hintStyle: const TextStyle(color: Colors.white54),
+                prefixIcon: const Icon(Icons.search, color: Colors.white70),
                 filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 16,
-                ),
+                fillColor: const Color(0xFF1C2B2B),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
@@ -76,194 +51,115 @@ class ProductScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 8),
-
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+              if (itemController.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                );
               }
 
-              if (controller.filteredProducts.isEmpty) {
+              if (itemController.filteredItems.isEmpty) {
                 return const Center(
                   child: Text(
-                    'No products found',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    'No items found',
+                    style: TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                 );
               }
 
-              return GridView.builder(
+              return ListView.builder(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: 12,
+                  vertical: 6,
                 ),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
-                  childAspectRatio: 0.65,
-                ),
-                itemCount: controller.filteredProducts.length,
+                itemCount: itemController.filteredItems.length,
                 itemBuilder: (context, index) {
-                  final product = controller.filteredProducts[index];
+                  final item = itemController.filteredItems[index];
 
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.25),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                  final image = item.images.isNotEmpty
+                      ? item.images.first
+                      : null;
+
+                  return Card(
+                    color: const Color(0xFF122021),
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(
+                        color: AppColors.accent.withOpacity(0.4),
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        /// 🖼️ Product Image
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(16),
-                          ),
-                          child: Image.network(
-                            product.productName ?? '',
-                            width: double.infinity,
-                            height: 130,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  height: 130,
-                                  width: double.infinity,
-                                  color: Colors.grey[100],
-                                  child: const Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.grey,
-                                    size: 40,
-                                  ),
-                                ),
-                          ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(12),
+
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: image != null
+                            ? Image.network(
+                                image,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => _placeholder(),
+                              )
+                            : _placeholder(),
+                      ),
+
+                      title: Text(
+                        item.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
                         ),
-
-                        /// 📦 Product Info
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          if (item.estimatedValue != null)
+                            Text(
+                              "Value: \$${item.estimatedValue!.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                /// Product Name
-                                Text(
-                                  product.productName ?? 'Unnamed Product',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
+                          if (item.purchasePrice != null)
+                            Text(
+                              "Purchase: \$${item.purchasePrice!.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
+                      ),
 
-                                /// Description (optional)
-                                if (product.productDescription != null)
-                                  Text(
-                                    product.productDescription!,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-
-                                /// 💰 Price + Actions
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    /// Price Section
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (product.discountAmount != null &&
-                                            product.discountAmount! > 0)
-                                          Text(
-                                            "₹${product.discountedPrice?.toStringAsFixed(2) ?? '0.00'}",
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                              color: Colors.green,
-                                            ),
-                                          ),
-                                        if (product.discountAmount != null &&
-                                            product.discountAmount! > 0)
-                                          Text(
-                                            "₹${product.productPrice?.toStringAsFixed(2)}",
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                              decoration:
-                                                  TextDecoration.lineThrough,
-                                            ),
-                                          )
-                                        else
-                                          Text(
-                                            "₹${product.productPrice?.toStringAsFixed(2)}",
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-
-                                    /// Action Buttons
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.edit,
-                                            color: Colors.blue,
-                                          ),
-                                          iconSize: 22,
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          onPressed: () {
-                                            // controller.editProduct(product);
-                                          },
-                                        ),
-                                        const SizedBox(width: 4),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.redAccent,
-                                          ),
-                                          iconSize: 22,
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          onPressed: () {
-                                            controller.deleteProduct(
-                                              product.productId,
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, color: Colors.white),
+                        color: Colors.white,
+                        onSelected: (value) {
+                          if (value == "edit") {
+                            // TODO Edit item page
+                          } else if (value == "delete") {
+                            itemController.deleteItems(item.itemId);
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          const PopupMenuItem(
+                            value: "edit",
+                            child: Text("Edit"),
+                          ),
+                          const PopupMenuItem(
+                            value: "delete",
+                            child: Text(
+                              "Delete",
+                              style: TextStyle(color: Colors.red),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -272,6 +168,15 @@ class ProductScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _placeholder() {
+    return Container(
+      width: 60,
+      height: 60,
+      color: Colors.black26,
+      child: const Icon(Icons.image_not_supported, color: Colors.white70),
     );
   }
 }

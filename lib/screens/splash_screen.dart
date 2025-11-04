@@ -102,11 +102,11 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.shopping_cart,
-                        size: 60,
-                        color: Colors.deepPurple,
-                      ),
+                      // child: const Icon(
+                      //   Icons.collections,
+                      //   size: 60,
+                      //   color: Colors.deepPurple,
+                      // ),
                     ),
                   ),
                 );
@@ -131,17 +131,6 @@ class _SplashScreenState extends State<SplashScreen>
             const SizedBox(height: 10),
 
             // Tagline
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: Text(
-                'Your Order, Our Priority',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
-              ),
-            ),
-
             const SizedBox(height: 60),
 
             // ✅ Reactive Loading Text

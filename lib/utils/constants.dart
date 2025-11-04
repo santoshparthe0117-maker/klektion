@@ -6,7 +6,7 @@ class AppConstants {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqdmhhdW9tcXBib3NvcG1xcWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3MTM3MjksImV4cCI6MjA3NzI4OTcyOX0.L3STC1R5z2FehXS528Ht1H0OowcXFOrj7ybIJxnLoz4';
 
   // App Configuration
-  static const String appName = 'Karo Sell';
+  static const String appName = 'KLEKTION';
   static const String appVersion = '1.0.0';
 
   // Validation Rules

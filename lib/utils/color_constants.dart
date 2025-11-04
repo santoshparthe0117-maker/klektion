@@ -22,8 +22,14 @@ class AppColors {
   static const textSecondary = Colors.grey;
 }
 
-final LinearGradient greenGradient = const LinearGradient(
-  colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
-  begin: Alignment.topCenter,
-  end: Alignment.bottomCenter,
+final LinearGradient goldGradient = const LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [
+    Color.fromARGB(255, 214, 172, 74), // soft highlight gold
+    Color.fromARGB(255, 205, 165, 48), // medium gold
+    Color(0xFFD4AF37), // your base gold
+    Color.fromARGB(255, 198, 156, 31), // deep gold shadow
+  ],
+  stops: [0.0, 0.35, 0.70, 1.0],
 );

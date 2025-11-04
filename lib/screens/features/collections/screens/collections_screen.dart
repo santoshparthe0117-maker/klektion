@@ -35,7 +35,7 @@ class CategoryScreen extends StatelessWidget {
                   padding: EdgeInsets.all(15),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    gradient: greenGradient,
+                    gradient: goldGradient,
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Row(

@@ -48,6 +48,65 @@ class ProductModel {
   }
 }
 
+class ItemModel {
+  final String itemId;
+  final String collectionId;
+  final String? categoryId;
+  final String name;
+  final String? description;
+  final double? purchasePrice;
+  final double? estimatedValue;
+  final DateTime? acquisitionDate;
+  final String? condition;
+  final String visibility;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  List<String> images;
+
+  ItemModel({
+    required this.itemId,
+    required this.collectionId,
+    this.categoryId,
+    required this.name,
+    this.description,
+    this.purchasePrice,
+    this.estimatedValue,
+    this.acquisitionDate,
+    this.condition,
+    required this.visibility,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.images = const [],
+  });
+
+  factory ItemModel.fromJson(Map<String, dynamic> json) {
+    return ItemModel(
+      itemId: json['item_id'],
+      collectionId: json['collection_id'],
+      categoryId: json['category_id'],
+      name: json['name'],
+      description: json['description'],
+      purchasePrice: (json['purchase_price'] as num?)?.toDouble(),
+      estimatedValue: (json['estimated_value'] as num?)?.toDouble(),
+      acquisitionDate: json['acquisition_date'] != null
+          ? DateTime.parse(json['acquisition_date'])
+          : null,
+      condition: json['condition'],
+      visibility: json['visibility'],
+      isDeleted: json['is_deleted'] ?? false,
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
+      images: (json['item_images'] != null)
+          ? (json['item_images'] as List)
+                .map((img) => img['image_url'] as String)
+                .toList()
+          : [],
+    );
+  }
+}
+
 class AddProductModel {
   final String productName;
   final String categoryId;
@@ -72,4 +131,42 @@ class AddProductModel {
     required this.description,
     this.imageUrls,
   });
+}
+
+class AddItemModel {
+  String itemId;
+  String collectionId;
+  String? categoryId;
+  String name;
+  String? description;
+  double? purchasePrice;
+  double? estimatedValue;
+  String visibility; // public / private
+  DateTime createdAt;
+
+  AddItemModel({
+    required this.itemId,
+    required this.collectionId,
+    this.categoryId,
+    required this.name,
+    this.description,
+    this.purchasePrice,
+    this.estimatedValue,
+    required this.visibility,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'item_id': itemId,
+      'collection_id': collectionId,
+      'category_id': categoryId,
+      'name': name,
+      'description': description,
+      'purchase_price': purchasePrice,
+      'estimated_value': estimatedValue,
+      'visibility': visibility,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 }
