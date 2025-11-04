@@ -1,0 +1,281 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/user_model.dart';
+import '../services/auth_service.dart';
+
+enum AuthState { initial, loading, authenticated, unauthenticated, error }
+
+class AuthController extends GetxController {
+  final AuthService _authService = AuthService();
+
+  final Rx<AuthState> _state = AuthState.initial.obs;
+  final Rxn<UserModel> _user = Rxn<UserModel>();
+  final RxnString _errorMessage = RxnString();
+
+  AuthState get state => _state.value;
+  UserModel? get user => _user.value;
+  String? get errorMessage => _errorMessage.value;
+  bool get isAuthenticated =>
+      _state.value == AuthState.authenticated && _user.value != null;
+  bool get isLoading => _state.value == AuthState.loading;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initializeAuth();
+  }
+
+  /// ✅ Initialize authentication state (auto-login if valid session)
+  Future<void> _initializeAuth() async {
+    _setState(AuthState.loading);
+    try {
+      final supabase = Supabase.instance.client;
+
+      // 1️⃣ Check if current session exists (user already logged in)
+      final currentSession = supabase.auth.currentSession;
+      if (currentSession != null) {
+        final userData = await _authService.getCurrentUser();
+        if (userData != null) {
+          _user.value = userData;
+          _setState(AuthState.authenticated);
+          return;
+        }
+      }
+
+      // 2️⃣ Recover saved session (if app was closed and reopened)
+      final prefs = await SharedPreferences.getInstance();
+      final storedSessionJson = prefs.getString('supabase_session');
+
+      if (storedSessionJson != null) {
+        // Convert JSON string to Session object
+        final sessionMap = jsonDecode(storedSessionJson);
+        final recoveredSession = Session.fromJson(sessionMap);
+
+        final response = await supabase.auth.recoverSession(
+          recoveredSession as String,
+        );
+
+        if (response.session != null) {
+          // ✅ Save refreshed session for next time
+          await prefs.setString(
+            'supabase_session',
+            jsonEncode(response.session!.toJson()),
+          );
+
+          final userData = await _authService.getCurrentUser();
+          if (userData != null) {
+            _user.value = userData;
+            _setState(AuthState.authenticated);
+            return;
+          }
+        }
+      }
+
+      _setState(AuthState.unauthenticated);
+    } catch (e) {
+      _setError('Failed to initialize authentication: ${e.toString()}');
+    }
+  }
+
+  Future<bool> checkVendorExists(String userId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('vendors')
+          .select('vendor_id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      // If response is not null → vendor record exists
+      return response != null;
+    } catch (e) {
+      debugPrint('Error checking vendor: $e');
+      return false;
+    }
+  }
+
+  Future<bool> signUp({
+    required String username,
+    required String password,
+    String? email,
+  }) async {
+    _setState(AuthState.loading);
+
+    try {
+      // 1️⃣ Step 1: Create user in Supabase Auth
+      final authResponse = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      final authUser = authResponse.user;
+      final session = authResponse.session;
+
+      if (authUser == null || session == null) {
+        _setError('User creation failed in Supabase Auth');
+        return false;
+      }
+
+      debugPrint("✅ Auth user created: ${authUser.id}");
+
+      // 2️⃣ Step 2: Create matching record in your custom 'users' table
+      final userProfile = {
+        'user_id': authUser.id,
+        'email': email ?? '',
+        'password_hash': password, // ⚠️ Store hashed in production
+        'name': username,
+        'avatar_url': '',
+        'bio': '',
+        'is_active': true,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      await Supabase.instance.client
+          .from('users')
+          .insert(userProfile)
+          .select()
+          .maybeSingle();
+
+      // 3️⃣ Step 3: Fetch the full user record from 'users' table
+      final userResponse = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('user_id', authUser.id)
+          .maybeSingle();
+
+      if (userResponse == null) {
+        _setError('User record not found in database');
+        return false;
+      }
+
+      // 4️⃣ Step 4: Convert to UserModel
+      final userModel = UserModel.fromJson(userResponse);
+
+      // 5️⃣ Step 5: Store user in observable
+      _user.value = userModel;
+
+      // ✅ Automatically handled: Supabase persists the session internally
+      _setState(AuthState.authenticated);
+
+      debugPrint("✅ UserModel created: ${userModel.name}");
+      return true;
+    } on PostgrestException catch (e) {
+      _setError('Database error: ${e.message}');
+      return false;
+    } on AuthException catch (e) {
+      _setError('Auth error: ${e.message}');
+      return false;
+    } catch (e) {
+      _setError('Sign up failed: ${e.toString()}');
+      return false;
+    }
+  }
+
+  Future<bool> signIn({
+    required String mobileNo,
+    required String password,
+  }) async {
+    _setState(AuthState.loading);
+
+    try {
+      // 🔹 Step 1: Sign in user with Supabase Auth
+      final response = await Supabase.instance.client.auth.signInWithPassword(
+        email: mobileNo, // You can replace with logic to detect email/phone
+        password: password,
+      );
+
+      final session = response.session;
+      final authUser = response.user;
+
+      if (authUser != null && session != null) {
+        debugPrint("✅ Logged in Auth user ID: ${authUser.id}");
+
+        // 🔹 Step 2: Fetch your full user details from your custom 'users' table
+        final userResponse = await Supabase.instance.client
+            .from('users') // 👈 replace with your table name
+            .select()
+            .eq('user_id', authUser.id)
+            .maybeSingle();
+
+        if (userResponse == null) {
+          _setError('User record not found in database');
+          return false;
+        }
+
+        // 🔹 Step 3: Convert response JSON to your UserModel
+        final userModel = UserModel.fromJson(userResponse);
+
+        // 🔹 Step 4: Store in observable
+        _user.value = userModel;
+
+        // 🔹 Optional: Save session persistently (Supabase does this automatically)
+        // await Supabase.instance.client.auth.persistSession(session.persistSessionString);
+
+        _setState(AuthState.authenticated);
+        debugPrint("✅ UserModel loaded: ${userModel.name}");
+        return true;
+      } else {
+        _setError('Invalid credentials');
+        return false;
+      }
+    } on AuthException catch (e) {
+      debugPrint('⚠️ AuthException: ${e.message}');
+      _setError('Authentication failed: ${e.message}');
+      return false;
+    } catch (e, stack) {
+      debugPrint('❌ Unexpected error: $e');
+      debugPrint('StackTrace: $stack');
+      _setError('Unexpected error occurred. Please try again.');
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getVendorByUserId(String userId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('vendors')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (response != null) {
+        return Map<String, dynamic>.from(response);
+      }
+      return null;
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+      return null;
+    }
+  }
+
+  Future<void> signOut() async {
+    _setState(AuthState.loading);
+    try {
+      await _authService.signOut();
+      _user.value = null;
+      _setState(AuthState.unauthenticated);
+    } catch (e) {
+      _setError('Sign out error: ${e.toString()}');
+    }
+  }
+
+  void clearError() {
+    _errorMessage.value = null;
+  }
+
+  void _setState(AuthState newState) {
+    _state.value = newState;
+    if (newState != AuthState.error) {
+      _errorMessage.value = null;
+    }
+  }
+
+  void _setError(String error) {
+    _errorMessage.value = error;
+    _state.value = AuthState.error;
+  }
+}
