@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/items_model.dart';
 
@@ -17,6 +19,9 @@ class ItemController extends GetxController {
   var selectedCategory;
   var selectedSubCategory;
   var imageFiles = <Uint8List>[].obs;
+
+  // Storage bucket name - you'll need to create this in Supabase
+  static const String bucketName = 'item-images';
 
   // @override
   // void onInit() {
@@ -86,24 +91,95 @@ class ItemController extends GetxController {
   }
 
   // ✅ Add product
-  RxList<File> images = <File>[].obs;
-  final picker = ImagePicker();
 
-  Future pickImage() async {
-    if (images.length >= 4) return;
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      images.add(File(picked.path));
+  Future pickImage({int limit = 4}) async {
+    try {
+      final picker = ImagePicker();
+      // Use the older, more compatible method for multiple image selection
+      final List<XFile> images = await picker.pickMultiImage(
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+        limit: limit,
+      );
+
+      return images;
+    } catch (e) {
+      print('Error picking images: $e');
+      Get.snackbar('Error', 'Failed to pick images: $e');
+      return null;
     }
   }
 
-  Future<String> uploadImage(String itemId, File file) async {
-    final fileName = "$itemId-${DateTime.now().millisecondsSinceEpoch}.jpg";
-    final path = 'items/$fileName';
+  /// Upload multiple images to Supabase storage
+  Future<List<String>> uploadImages(List<XFile> images) async {
+    if (images.isEmpty) return [];
 
-    await supabase.storage.from('item_images').upload(path, file);
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
 
-    return supabase.storage.from('item_images').getPublicUrl(path);
+      List<String> uploadedUrls = [];
+
+      for (int i = 0; i < images.length; i++) {
+        final image = images[i];
+        final fileName = await _uploadSingleImage(image, userId);
+
+        if (fileName != null) {
+          final publicUrl = supabase.storage
+              .from(bucketName)
+              .getPublicUrl(fileName);
+          uploadedUrls.add(publicUrl);
+        }
+      }
+
+      return uploadedUrls;
+    } catch (e) {
+      print('Error uploading images: $e');
+      Get.snackbar('Error', 'Failed to upload images: $e');
+      return [];
+    }
+  }
+
+  /// Upload single image file
+  Future<String?> _uploadSingleImage(XFile image, String userId) async {
+    try {
+      final bytes = await image.readAsBytes();
+      final fileExt = path.extension(image.path).toLowerCase();
+      final fileName =
+          '${userId}/${DateTime.now().millisecondsSinceEpoch}$fileExt';
+
+      // Get MIME type
+      final mimeType = lookupMimeType(image.path) ?? 'image/jpeg';
+
+      await supabase.storage
+          .from(bucketName)
+          .uploadBinary(
+            fileName,
+            bytes,
+            fileOptions: FileOptions(contentType: mimeType, upsert: false),
+          );
+
+      return fileName;
+    } catch (e) {
+      print('Error uploading single image: $e');
+      return null;
+    }
+  }
+
+  /// Save image record to database
+  Future<void> _saveImageRecord(String imageUrl, String itemId) async {
+    try {
+      await supabase.from('item_images').insert({
+        'item_id': itemId,
+        'image_url': imageUrl,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print('Error saving image record: $e');
+    }
   }
 
   Future<bool> addItem({
@@ -116,6 +192,7 @@ class ItemController extends GetxController {
     required String visibility, // private / public
     DateTime? acquisitionDate,
     String? condition,
+    required List<String> imageUrls,
   }) async {
     try {
       isLoading.value = true;
@@ -153,12 +230,8 @@ class ItemController extends GetxController {
       final String itemId = inserted['item_id'];
 
       // ✅ Upload images and insert into item_images table
-      for (var file in images) {
-        final url = await uploadImage(itemId, file);
-        await supabase.from('item_images').insert({
-          'item_id': itemId,
-          'image_url': url,
-        });
+      for (var imageUrl in imageUrls) {
+        _saveImageRecord(imageUrl, itemId);
       }
 
       return true;

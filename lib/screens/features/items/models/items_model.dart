@@ -105,6 +105,11 @@ class ItemModel {
           : [],
     );
   }
+
+  @override
+  String toString() {
+    return 'ItemModel(itemId: $itemId, collectionId: $collectionId, categoryId: $categoryId, name: $name, description: $description, purchasePrice: $purchasePrice, estimatedValue: $estimatedValue, acquisitionDate: $acquisitionDate, condition: $condition, visibility: $visibility, isDeleted: $isDeleted, createdAt: $createdAt, updatedAt: $updatedAt, images: $images)';
+  }
 }
 
 class AddProductModel {
