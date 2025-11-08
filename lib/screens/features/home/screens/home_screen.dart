@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:klektion/screens/features/collections/screens/create_collections.dart';
 import 'package:klektion/utils/color_constants.dart';
 
-import '../controllers/collection_controller.dart';
+import '../../collections/controllers/collections_controller.dart';
+import '../../collections/screens/collections_screen.dart';
 import '../controllers/dashboard_controller.dart';
 import '../models/collection_model.dart';
 
 /// 🏠 Responsive Home Screen
 class HomeScreen extends StatelessWidget {
   final dashboardController = Get.find<DashboardController>();
-  final collectionController = Get.find<CollectionController>();
 
   HomeScreen({super.key});
 
@@ -53,6 +54,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -136,17 +138,17 @@ class HomeScreen extends StatelessWidget {
                             const SizedBox(height: 8),
 
                             // Collections list
-                            Column(
-                              children: collectionController.myCollections
-                                  .map(
-                                    (c) => _buildCollectionCard(
-                                      context,
-                                      c,
-                                      isTablet: isTablet,
-                                    ),
-                                  )
-                                  .toList(),
-                            ),
+                            // Column(
+                            //   children: collectionController.myCollections
+                            //       .map(
+                            //         (c) => _buildCollectionCard(
+                            //           context,
+                            //           c,
+                            //           isTablet: isTablet,
+                            //         ),
+                            //       )
+                            //       .toList(),
+                            // ),
                             const SizedBox(height: 24),
 
                             _sectionHeader("Recent Items"),
@@ -191,19 +193,19 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
             value,
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
             ),
           ),
         ],
@@ -224,9 +226,14 @@ class HomeScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const Text(
-          "View All",
-          style: TextStyle(color: AppColors.textSecondary),
+        InkWell(
+          onTap: () {
+            Get.to(() => CollectionsScreen());
+          },
+          child: const Text(
+            "View All",
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ),
       ],
     );

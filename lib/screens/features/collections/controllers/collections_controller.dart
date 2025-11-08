@@ -1,204 +1,77 @@
 import 'dart:io';
-import 'dart:typed_data';
-
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/collection_model.dart';
 
-class CategoryController extends GetxController {
-  RxList<CategoryModel> categories = <CategoryModel>[].obs;
-  RxList<CategoryModel> filteredCategories = <CategoryModel>[].obs;
-  RxBool isLoading = false.obs;
-  var isLoadingAdd = false.obs;
+class CollectionController extends GetxController {
   final supabase = Supabase.instance.client;
+  final RxList<CollectionModel> collections = <CollectionModel>[].obs;
+  final RxBool isLoading = false.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    fetchCategories();
+  Future<void> getCollections() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+
+    try {
+      isLoading.value = true;
+      final response = await supabase
+          .from('collections')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      collections.value = (response as List)
+          .map((e) => CollectionModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      print("Get collections error: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  Future<String?> uploadImage(Uint8List imageBytes, String fileName) async {
+  Future<String?> uploadImage(File file) async {
     try {
-      final path = 'categories/$fileName';
-      await supabase.storage
-          .from('category-images')
-          .uploadBinary(
-            path,
-            imageBytes,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-          );
-      final imageUrl = supabase.storage
-          .from('category-images')
-          .getPublicUrl(path);
-      return imageUrl;
+      final path = 'collections/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      await supabase.storage.from('collection-images').upload(path, file);
+      final url = supabase.storage.from('collection-images').getPublicUrl(path);
+      return url;
     } catch (e) {
-      print('❌ Error uploading image: $e');
+      print("Upload error: $e");
       return null;
     }
   }
 
-  /// Insert category record into Supabase
-  Future<bool> addCategory({
-    required String categoryName,
-    required String? categoryDescription,
-
-    // required Uint8List? imageBytes,
+  Future<bool> addCollection({
+    required String name,
+    required String description,
+    required String privacy,
+    File? coverImage,
   }) async {
-    bool isSuccess = false;
     try {
       isLoading.value = true;
+      final userId = Supabase.instance.client.auth.currentUser?.id;
 
-      final vendorId = supabase.auth.currentUser?.id;
-
-      if (vendorId == null) {
-        Get.snackbar('Error', 'User not authenticated.');
-        return false;
+      String? imageUrl;
+      if (coverImage != null) {
+        imageUrl = await uploadImage(coverImage);
       }
 
-      // Upload image
-      final imageUrl = '';
-      // if (imageBytes != null) {
-      //   final imageUrl = await uploadImage(
-      //     imageBytes,
-      //     '${DateTime.now().millisecondsSinceEpoch}.png',
-      //   );
-      // }
+      final data = {
+        'user_id': userId,
+        'name': name,
+        'description': description,
+        'privacy': privacy,
+        'cover_image_url': imageUrl,
+        'created_at': DateTime.now().toIso8601String(),
+      };
 
-      final category = CategoryModelForPost(
-        vendorId: vendorId,
-        categoryName: categoryName,
-        categoryDescription: categoryDescription,
-        categoryImagePath: imageUrl,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      await supabase.from('collections').insert(data);
 
-      final response = await supabase
-          .from('product_categories')
-          .insert(category.toJson())
-          .select();
-
-      if (response.isNotEmpty) {
-        // Map the response to your CategoryModel
-        final newCategory = CategoryModel(
-          productCategoryId: response[0]['product_category_id'].toString(),
-          vendorId: response[0]['vendor_id'],
-          categoryName: response[0]['category_name'],
-          categoryDescription: response[0]['category_description'],
-          categoryImagePath: response[0]['category_image_path'],
-          isActive: response[0]['is_active'] ?? true,
-          isDeleted: response[0]['is_deleted'] ?? false,
-          createdAt: DateTime.parse(response[0]['created_at']),
-          updatedAt: DateTime.parse(response[0]['updated_at']),
-        );
-
-        // Add the new category to the filteredCategories list
-        filteredCategories.add(newCategory);
-        isSuccess = true;
-      } else {}
+      await getCollections(); // refresh list
+      return true;
     } catch (e) {
-      Get.snackbar('❌ Error', e.toString());
-    } finally {
-      isLoading.value = false;
-    }
-    return isSuccess;
-  }
-
-  void fetchCategories() async {
-    try {
-      isLoading.value = true;
-      final vendorId = supabase.auth.currentUser?.id ?? '';
-
-      // Fetch categories from Supabase
-      final response = await supabase
-          .from('product_categories')
-          .select()
-          .eq('vendor_id', vendorId) // filter by current vendor/user
-          .eq('is_deleted', false) // optional: only active categories
-          .order('created_at', ascending: true);
-
-      if (response != null && response.isNotEmpty) {
-        // Map the Supabase data to your CategoryModel
-        final List<CategoryModel> categoriesList = (response as List)
-            .map(
-              (e) => CategoryModel(
-                productCategoryId: e['product_category_id'].toString(),
-                vendorId: e['vendor_id'],
-                categoryName: e['category_name'],
-                categoryDescription: e['category_description'],
-                categoryImagePath: e['category_image_path'],
-                isActive: e['is_active'] ?? true,
-                isDeleted: e['is_deleted'] ?? false,
-                createdAt: DateTime.parse(e['created_at']),
-                updatedAt: DateTime.parse(e['updated_at']),
-              ),
-            )
-            .toList();
-
-        // Update filteredCategories observable
-        filteredCategories.assignAll(categoriesList);
-        categories.assignAll(categoriesList);
-      } else {
-        filteredCategories.clear(); // No categories found for this user
-        categories.clear();
-      }
-    } catch (e) {
-      print('Error fetching categories: $e');
-      filteredCategories.clear();
-      categories.clear();
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  void filterCategories(String query) {
-    if (query.isEmpty) {
-      filteredCategories.assignAll(categories);
-    } else {
-      filteredCategories.assignAll(
-        categories
-            .where(
-              (cat) => cat.categoryName.toLowerCase().contains(
-                query.toLowerCase().trim(),
-              ),
-            )
-            .toList(),
-      );
-    }
-  }
-
-  Future<void> deleteCategory(String categoryId) async {
-    try {
-      isLoading.value = true;
-
-      final response = await supabase
-          .from('product_categories')
-          .update({'is_deleted': true})
-          .eq('product_category_id', int.parse(categoryId))
-          .select(); // 👈 Required to get data back
-
-      if (response != null && response.isNotEmpty) {
-        categories.removeWhere((c) => c.productCategoryId == categoryId);
-        filteredCategories.removeWhere(
-          (c) => c.productCategoryId == categoryId,
-        );
-
-        Get.snackbar('✅ Success', 'Category deleted successfully.');
-      } else {
-        // Even if response is null but query succeeded, handle gracefully
-        categories.removeWhere((c) => c.productCategoryId == categoryId);
-        filteredCategories.removeWhere(
-          (c) => c.productCategoryId == categoryId,
-        );
-        Get.snackbar(
-          '✅ Success',
-          'Category deleted successfully (no response).',
-        );
-      }
-    } catch (e) {
-      Get.snackbar('❌ Error', e.toString());
+      print("Add collection error: $e");
+      return false;
     } finally {
       isLoading.value = false;
     }

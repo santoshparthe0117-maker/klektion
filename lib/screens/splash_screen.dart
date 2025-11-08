@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:klektion/utils/color_constants.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/constants.dart';
 import '../routes/app_routes.dart';
@@ -75,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
+      backgroundColor: AppColors.textColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

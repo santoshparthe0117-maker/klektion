@@ -1,68 +1,42 @@
-class CategoryModel {
-  final String productCategoryId;
-  final String vendorId;
-  final String categoryName;
-  final String? categoryDescription;
-  final String categoryImagePath;
-  final bool isActive;
-  final bool isDeleted;
+class CollectionModel {
+  final String collectionId;
+  final String userId;
+  final String name;
+  final String description;
+  final String privacy;
+  final String? coverImageUrl;
   final DateTime createdAt;
-  final DateTime updatedAt;
 
-  CategoryModel({
-    required this.productCategoryId,
-    required this.vendorId,
-    required this.categoryName,
-    this.categoryDescription,
-    required this.categoryImagePath,
-    this.isActive = true,
-    this.isDeleted = false,
+  CollectionModel({
+    required this.collectionId,
+    required this.userId,
+    required this.name,
+    required this.description,
+    required this.privacy,
+    this.coverImageUrl,
     required this.createdAt,
-    required this.updatedAt,
   });
 
-  Map<String, dynamic> toJson() => {
-    'product_category_id': productCategoryId,
-    'vendor_id': vendorId,
-    'category_name': categoryName,
-    'category_description': categoryDescription,
-    'category_image_path': categoryImagePath,
-    'is_active': isActive,
-    'is_deleted': isDeleted,
-    'created_at': createdAt.toIso8601String(),
-    'updated_at': updatedAt.toIso8601String(),
-  };
-}
+  factory CollectionModel.fromJson(Map<String, dynamic> json) {
+    return CollectionModel(
+      collectionId: json['collection_id'] ?? '',
+      userId: json['user_id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      privacy: json['privacy'] ?? 'Private',
+      coverImageUrl: json['cover_image_url'],
+      createdAt: DateTime.parse(json['created_at']),
+    );
+  }
 
-class CategoryModelForPost {
-  final String vendorId;
-  final String categoryName;
-  final String? categoryDescription;
-  final String categoryImagePath;
-  final bool isActive;
-  final bool isDeleted;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
-  CategoryModelForPost({
-    required this.vendorId,
-    required this.categoryName,
-    this.categoryDescription,
-    required this.categoryImagePath,
-    this.isActive = true,
-    this.isDeleted = false,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'vendor_id': vendorId,
-    'category_name': categoryName,
-    'category_description': categoryDescription,
-    'category_image_path': categoryImagePath,
-    'is_active': isActive,
-    'is_deleted': isDeleted,
-    'created_at': createdAt.toIso8601String(),
-    'updated_at': updatedAt.toIso8601String(),
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': userId,
+      'name': name,
+      'description': description,
+      'privacy': privacy,
+      'cover_image_url': coverImageUrl,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 }

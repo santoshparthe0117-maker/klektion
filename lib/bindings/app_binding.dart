@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../screens/features/home/controllers/collection_controller.dart';
+import '../screens/features/collections/controllers/collections_controller.dart';
 import '../screens/features/home/controllers/dashboard_controller.dart';
 import '../screens/features/items/controllers/items_controller.dart';
 
