@@ -66,18 +66,21 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
       appBar: AppBar(
         title: const Text(
           'Create Collection',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: AppColors.primaryColor),
         ),
         backgroundColor: AppColors.themeColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.primaryColor),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('Cover Image', style: TextStyle(color: Colors.white)),
+              SizedBox(height: 10),
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(

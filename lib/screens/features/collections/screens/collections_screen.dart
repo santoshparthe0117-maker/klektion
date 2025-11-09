@@ -68,26 +68,38 @@ class CollectionsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (collection.coverImageUrl != null)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: Image.network(
-                collection.coverImageUrl!,
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 160,
-                  color: Colors.grey.shade800,
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    color: Colors.white,
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child:
+                (collection.coverImageUrl != null &&
+                    collection.coverImageUrl!.isNotEmpty)
+                ? Image.network(
+                    collection.coverImageUrl!,
+                    height: 160,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 160,
+                      width: double.infinity,
+                      color: Colors.grey.shade800,
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                    ),
+                  )
+                : Container(
+                    height: 160,
+                    width: double.infinity,
+                    color: Colors.grey.shade800,
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                   ),
-                ),
-              ),
-            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
