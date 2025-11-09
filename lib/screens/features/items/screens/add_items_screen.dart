@@ -26,18 +26,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final ItemController _itemController = Get.put(ItemController());
   final ImageController _imageController = ImageController();
 
+  final _formKey = GlobalKey<FormState>();
+
   final nameCtrl = TextEditingController();
-
   final descCtrl = TextEditingController();
-
   final priceCtrl = TextEditingController();
-
   final valueCtrl = TextEditingController();
 
   String? selectedCategory;
-
   CollectionModel? selectedCollection;
-
   String selectedPrivacy = 'Private';
 
   final goldGradient = const LinearGradient(
@@ -45,10 +42,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
   );
 
   List<XFile> images = [];
+
   List<Map<String, dynamic>> privacyList = [
     {"name": "Private", "id": "private"},
     {"name": "Public", "id": "public"},
   ];
+
   List<Map<String, dynamic>> categoryList = [
     {"name": "Watch", "id": "watch"},
     {"name": "Comic", "id": "comic"},
@@ -59,7 +58,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
   void initState() {
     super.initState();
     if (widget.item != null) {
-      print(widget.item?.toString());
       nameCtrl.text = widget.item!.name;
       descCtrl.text = widget.item!.description ?? '';
       priceCtrl.text = widget.item!.purchasePrice?.toString() ?? '';
@@ -81,170 +79,185 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Photos", style: TextStyle(color: Colors.white)),
-            const SizedBox(height: 8),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Photos", style: TextStyle(color: Colors.white)),
+              const SizedBox(height: 8),
 
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      images = await _imageController.pickMultipleImages();
-
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
-                    child: Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Colors.white24,
-                          style: BorderStyle.solid,
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  ...images.map(
-                    (file) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(
-                          File(file.path),
-                          width: 70,
-                          height: 70,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            _input("Item Name", "e.g., Rolex Submariner", nameCtrl),
-            _dropdown(
-              "Category",
-              categoryList,
-              (v) => selectedCategory = v['name'],
-              selectedCategory != null
-                  ? categoryList.firstWhere(
-                      (c) => c['name'] == selectedCategory,
-                    )
-                  : null,
-            ),
-            _dropdown(
-              "Add to Collection",
-              _collectionController.collections
-                  .map((c) => {'name': c.name, 'id': c.collectionId})
-                  .toList(),
-              (v) => selectedCollection = _collectionController.collections
-                  .firstWhere((c) => c.collectionId == v['id']),
-              selectedCollection != null
-                  ? {
-                      'name': selectedCollection?.name ?? '',
-                      'id': selectedCollection?.collectionId ?? '',
-                    }
-                  : null,
-            ),
-            _currencyField("Purchase Price", priceCtrl),
-            _currencyField("Current Value", valueCtrl),
-
-            _dropdown(
-              "Privacy",
-              privacyList,
-              (v) => selectedPrivacy = v['name'],
-              privacyList.firstWhere((p) => p['name'] == selectedPrivacy),
-            ),
-            const SizedBox(height: 12),
-            _textArea("Description", descCtrl),
-
-            const SizedBox(height: 18),
-
-            Obx(
-              () => GestureDetector(
-                onTap: _itemController.isLoading.value
-                    ? null
-                    : () async {
-                        _itemController.isLoading.value = true;
-                        List<String> imageUrls = await _imageController
-                            .uploadImages(
-                              images,
-                              AppConstants.itemImagesBucket,
-                            );
-                        if (imageUrls.isEmpty) {
-                          _itemController.isLoading.value = false;
-                          Get.snackbar("Error", "Failed to upload images");
-                          return;
-                        }
-                        bool result = await _itemController.addItem(
-                          name: nameCtrl.text.trim(),
-                          collectionId: selectedCollection?.collectionId ?? '',
-                          // "5a98cb59-54b5-49d9-af4f-4a06e9b36363", // TODO: dynamic later
-                          categoryId: 'add6f410-21c9-4980-8a52-9873bc9c36b6',
-                          purchasePrice: double.tryParse(priceCtrl.text),
-                          estimatedValue: double.tryParse(valueCtrl.text),
-                          description: descCtrl.text.trim(),
-                          visibility: selectedPrivacy.toLowerCase(),
-                          imageUrls: imageUrls,
-                        );
-
-                        if (result) {
-                          Get.closeAllSnackbars();
-                          Get.back(result: true);
-                          Get.snackbar("Success", "Item added to collection");
-                        } else {
-                          Get.snackbar("Error", "Failed to add item");
-                        }
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        images = await _imageController.pickMultipleImages();
+                        if (mounted) setState(() {});
                       },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    gradient: goldGradient,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(
-                    child: _itemController.isLoading.value
-                        ? const CircularProgressIndicator(color: Colors.black)
-                        : const Text(
-                            "Add to Collection",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white24, width: 1),
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    ...images.map(
+                      (file) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            File(file.path),
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
                           ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              _input("Item Name", "e.g., Rolex Submariner", nameCtrl),
+              _dropdown(
+                "Category",
+                categoryList,
+                (v) => selectedCategory = v['name'],
+                selectedCategory != null
+                    ? categoryList.firstWhere(
+                        (c) => c['name'] == selectedCategory,
+                      )
+                    : null,
+              ),
+              _dropdown(
+                "Add to Collection",
+                _collectionController.collections
+                    .map((c) => {'name': c.name, 'id': c.collectionId})
+                    .toList(),
+                (v) => selectedCollection = _collectionController.collections
+                    .firstWhere((c) => c.collectionId == v['id']),
+                selectedCollection != null
+                    ? {
+                        'name': selectedCollection?.name,
+                        'id': selectedCollection?.collectionId,
+                      }
+                    : null,
+              ),
+
+              _currencyField("Purchase Price", priceCtrl),
+              _currencyField("Current Value", valueCtrl),
+
+              _dropdown(
+                "Privacy",
+                privacyList,
+                (v) => selectedPrivacy = v['name'],
+                privacyList.firstWhere((p) => p['name'] == selectedPrivacy),
+              ),
+              const SizedBox(height: 12),
+              _textArea("Description", descCtrl),
+
+              const SizedBox(height: 18),
+
+              Obx(
+                () => GestureDetector(
+                  onTap: _itemController.isLoading.value
+                      ? null
+                      : () async {
+                          // ✅ FORM VALIDATION
+                          if (!_formKey.currentState!.validate()) {
+                            // Get.snackbar("Error", "Please fix the errors");
+                            return;
+                          }
+
+                          // ✅ IMAGE VALIDATION
+                          if (images.isEmpty) {
+                            Get.snackbar(
+                              "Error",
+                              "Please upload at least one image",
+                            );
+                            return;
+                          }
+
+                          _itemController.isLoading.value = true;
+
+                          List<String> imageUrls = await _imageController
+                              .uploadImages(
+                                images,
+                                AppConstants.itemImagesBucket,
+                              );
+
+                          if (imageUrls.isEmpty) {
+                            _itemController.isLoading.value = false;
+                            Get.snackbar("Error", "Image upload failed");
+                            return;
+                          }
+
+                          bool result = await _itemController.addItem(
+                            name: nameCtrl.text.trim(),
+                            collectionId:
+                                selectedCollection?.collectionId ?? '',
+                            categoryId: selectedCategory ?? '',
+                            purchasePrice: double.tryParse(priceCtrl.text),
+                            estimatedValue: double.tryParse(valueCtrl.text),
+                            description: descCtrl.text.trim(),
+                            visibility: selectedPrivacy.toLowerCase(),
+                            imageUrls: imageUrls,
+                          );
+
+                          if (result) {
+                            Get.back(result: true);
+                            Get.snackbar("Success", "Item added successfully");
+                          } else {
+                            Get.snackbar("Error", "Failed to add item");
+                          }
+                        },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      gradient: goldGradient,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: _itemController.isLoading.value
+                          ? const CircularProgressIndicator(color: Colors.black)
+                          : const Text(
+                              "Add to Collection",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // ✅ VALIDATED DROPDOWN
   Widget _dropdown(
     String label,
     List<Map<String, dynamic>> list,
-    onChanged,
-    var value,
+    Function(dynamic) onChanged,
+    dynamic value,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,6 +268,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
           dropdownColor: const Color(0xFF1C2B22),
           value: value,
           onChanged: onChanged,
+          validator: (v) => v == null ? "Please select $label" : null,
           items: list
               .map(
                 (e) => DropdownMenuItem(
@@ -273,15 +287,17 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
   }
 
+  // ✅ INPUT WITH VALIDATOR
   Widget _input(String label, String hint, TextEditingController c) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Colors.white)),
         const SizedBox(height: 6),
-        TextField(
+        TextFormField(
           controller: c,
           style: const TextStyle(color: Colors.white),
+          validator: (v) => v!.trim().isEmpty ? "$label is required" : null,
           decoration: _fieldDecoration(hint: hint),
         ),
         const SizedBox(height: 12),
@@ -293,18 +309,28 @@ class _AddItemScreenState extends State<AddItemScreen> {
     return _input(label, "", c);
   }
 
+  // ✅ NUMERIC VALIDATION ADDED
   Widget _currencyField(String label, TextEditingController c) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Colors.white)),
         const SizedBox(height: 6),
-        TextField(
+        TextFormField(
           controller: c,
           keyboardType: TextInputType.number,
           style: const TextStyle(color: Colors.white),
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) {
+              return "$label is required";
+            }
+            if (double.tryParse(v) == null) {
+              return "Enter a valid number";
+            }
+            return null;
+          },
           decoration: _fieldDecoration(
-            prefix: Text("\$ ", style: TextStyle(color: Colors.white)),
+            prefix: const Text("\$ ", style: TextStyle(color: Colors.white)),
           ),
         ),
         const SizedBox(height: 12),
