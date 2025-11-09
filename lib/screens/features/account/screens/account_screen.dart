@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../../../../controllers/auth_controller.dart';
+import 'categories_scrern.dart';
 
 class ProfileScreen extends StatelessWidget {
   final authController = Get.find<AuthController>();
@@ -115,6 +116,15 @@ class ProfileScreen extends StatelessWidget {
                 _statsCard("1.2k", "Followers", statCardSize, isTablet),
                 _statsCard("345", "Following", statCardSize, isTablet),
               ],
+            ),
+
+            _buildGradientCard(
+              icon: Icons.category,
+              title: "Manage Categories",
+              onTap: () {
+                final userId = authController.user?.userId ?? "";
+                Get.to(() => CategoriesScreen());
+              },
             ),
 
             SizedBox(height: isTablet ? 28 : 20),
@@ -263,6 +273,60 @@ class ProfileScreen extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(color: Colors.white, fontSize: tab ? 18 : 15),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientCard({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFD4AF37), Color(0xFFB38A2D)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10,
+              offset: Offset(2, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+          ],
         ),
       ),
     );
