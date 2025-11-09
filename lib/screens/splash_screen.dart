@@ -25,7 +25,20 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _initializeAnimations();
-    _checkAuthStatus();
+    // _checkAuthStatus();
+    _navigateToNextScreen();
+  }
+
+  _navigateToNextScreen() async {
+    await Future.delayed(const Duration(seconds: 3));
+
+    final AuthController authController = Get.find<AuthController>();
+
+    if (authController.currentUser.value != null) {
+      _navigateToHome();
+    } else {
+      _navigateToSignIn();
+    }
   }
 
   void _initializeAnimations() {

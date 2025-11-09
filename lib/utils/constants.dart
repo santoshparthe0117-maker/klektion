@@ -46,4 +46,7 @@ class AppConstants {
   static const String usernameRequiredMessage = 'Username is required';
   static const String mobileRequiredMessage = 'Mobile number is required';
   static const String passwordRequiredMessage = 'Password is required';
+
+  static const String collectionImagesBucket = 'collection-images';
+  static const String itemImagesBucket = 'item-images';
 }

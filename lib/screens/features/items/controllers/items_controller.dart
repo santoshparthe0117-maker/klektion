@@ -1,9 +1,5 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:mime/mime.dart';
-import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/items_model.dart';
 
@@ -19,9 +15,6 @@ class ItemController extends GetxController {
   var selectedCategory;
   var selectedSubCategory;
   var imageFiles = <Uint8List>[].obs;
-
-  // Storage bucket name - you'll need to create this in Supabase
-  static const String bucketName = 'item-images';
 
   // @override
   // void onInit() {
@@ -88,85 +81,6 @@ class ItemController extends GetxController {
   void deleteItems(String id) {
     itemList.removeWhere((p) => p.itemId == id);
     filteredItems.removeWhere((p) => p.itemId == id);
-  }
-
-  // ✅ Add product
-
-  Future pickImage({int limit = 4}) async {
-    try {
-      final picker = ImagePicker();
-      // Use the older, more compatible method for multiple image selection
-      final List<XFile> images = await picker.pickMultiImage(
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
-        limit: limit,
-      );
-
-      return images;
-    } catch (e) {
-      print('Error picking images: $e');
-      Get.snackbar('Error', 'Failed to pick images: $e');
-      return null;
-    }
-  }
-
-  /// Upload multiple images to Supabase storage
-  Future<List<String>> uploadImages(List<XFile> images) async {
-    if (images.isEmpty) return [];
-
-    try {
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) {
-        throw Exception('User not authenticated');
-      }
-
-      List<String> uploadedUrls = [];
-
-      for (int i = 0; i < images.length; i++) {
-        final image = images[i];
-        final fileName = await _uploadSingleImage(image, userId);
-
-        if (fileName != null) {
-          final publicUrl = supabase.storage
-              .from(bucketName)
-              .getPublicUrl(fileName);
-          uploadedUrls.add(publicUrl);
-        }
-      }
-
-      return uploadedUrls;
-    } catch (e) {
-      print('Error uploading images: $e');
-      Get.snackbar('Error', 'Failed to upload images: $e');
-      return [];
-    }
-  }
-
-  /// Upload single image file
-  Future<String?> _uploadSingleImage(XFile image, String userId) async {
-    try {
-      final bytes = await image.readAsBytes();
-      final fileExt = path.extension(image.path).toLowerCase();
-      final fileName =
-          '${userId}/${DateTime.now().millisecondsSinceEpoch}$fileExt';
-
-      // Get MIME type
-      final mimeType = lookupMimeType(image.path) ?? 'image/jpeg';
-
-      await supabase.storage
-          .from(bucketName)
-          .uploadBinary(
-            fileName,
-            bytes,
-            fileOptions: FileOptions(contentType: mimeType, upsert: false),
-          );
-
-      return fileName;
-    } catch (e) {
-      print('Error uploading single image: $e');
-      return null;
-    }
   }
 
   /// Save image record to database

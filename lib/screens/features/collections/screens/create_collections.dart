@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:klektion/controllers/image_controller.dart';
+import 'package:klektion/utils/constants.dart';
 
 import '../../../../utils/color_constants.dart';
 import '../controllers/collections_controller.dart';
@@ -16,6 +18,7 @@ class CreateCollectionScreen extends StatefulWidget {
 class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
   final _formKey = GlobalKey<FormState>();
   final CollectionController controller = Get.find();
+  final ImageController _imageController = ImageController();
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
@@ -23,22 +26,36 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
   File? coverImage;
   String privacy = 'Public';
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => coverImage = File(image.path));
-    }
-  }
-
   Future<void> _saveCollection() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (coverImage == null) {
+      Get.snackbar(
+        'Error',
+        'Please upload a cover image',
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    List<String> imageUrls = await _imageController.uploadImages([
+      XFile(coverImage!.path),
+    ], AppConstants.collectionImagesBucket);
+    if (imageUrls.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Failed to upload cover image',
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
     final success = await controller.addCollection(
       name: _nameController.text.trim(),
       description: _descController.text.trim(),
       privacy: privacy,
-      coverImage: coverImage,
+      coverImageUrl: imageUrls[0],
     );
 
     if (success) {
@@ -79,7 +96,15 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
           child: Column(
             children: [
               GestureDetector(
-                onTap: _pickImage,
+                onTap: () async {
+                  var image = await _imageController.pickImage();
+                  if (image != null) {
+                    coverImage = File(image.path);
+                  }
+                  if (mounted) {
+                    setState(() {});
+                  }
+                },
                 child: Container(
                   height: 150,
                   decoration: BoxDecoration(

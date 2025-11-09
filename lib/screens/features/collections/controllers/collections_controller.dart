@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:get/get.dart';
+import 'package:klektion/utils/constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/collection_model.dart';
 
@@ -15,7 +16,7 @@ class CollectionController extends GetxController {
       isLoading.value = true;
       final response = await supabase
           .from('collections')
-          .select()
+          .select('*, collection_images(image_url)')
           .eq('user_id', userId)
           .order('created_at', ascending: false);
 
@@ -29,31 +30,37 @@ class CollectionController extends GetxController {
     }
   }
 
-  Future<String?> uploadImage(File file) async {
-    try {
-      final path = 'collections/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      await supabase.storage.from('collection-images').upload(path, file);
-      final url = supabase.storage.from('collection-images').getPublicUrl(path);
-      return url;
-    } catch (e) {
-      print("Upload error: $e");
-      return null;
-    }
-  }
+  // /// Get all images for current user
+  // Future<List<Map<String, dynamic>>> getCollectionImage(String collectionId) async {
+  //   try {
+  //     final userId = supabase.auth.currentUser?.id;
+  //     if (userId == null) return [];
+
+  //     final response = await supabase
+  //         .from(AppConstants.collectionImagesBucket)
+  //         .select('*')
+  //     .eq('user_id', userId)
+  //     // .order('uploaded_at', ascending: false);
+
+  //     return List<Map<String, dynamic>>.from(response);
+  //   } catch (e) {
+  //     print('Error fetching user images: $e');
+  //     return [];
+  //   }
+  // }
 
   Future<bool> addCollection({
     required String name,
     required String description,
     required String privacy,
-    File? coverImage,
+    String? coverImageUrl,
   }) async {
     try {
       isLoading.value = true;
       final userId = Supabase.instance.client.auth.currentUser?.id;
 
-      String? imageUrl;
-      if (coverImage != null) {
-        imageUrl = await uploadImage(coverImage);
+      if (userId == null) {
+        throw Exception('User not authenticated');
       }
 
       final data = {
@@ -61,11 +68,25 @@ class CollectionController extends GetxController {
         'name': name,
         'description': description,
         'privacy': privacy,
-        'cover_image_url': imageUrl,
+        'cover_image_url': coverImageUrl,
         'created_at': DateTime.now().toIso8601String(),
       };
 
-      await supabase.from('collections').insert(data);
+      final inserted = await supabase
+          .from('collections')
+          .insert(data)
+          .select()
+          .single();
+
+      final String collectionId = inserted['collection_id'];
+
+      if (coverImageUrl != null) {
+        await supabase.from('collection_images').insert({
+          'collection_id': collectionId,
+          'image_url': coverImageUrl,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
 
       await getCollections(); // refresh list
       return true;

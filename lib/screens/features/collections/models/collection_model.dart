@@ -24,8 +24,14 @@ class CollectionModel {
       name: json['name'] ?? '',
       description: json['description'] ?? '',
       privacy: json['privacy'] ?? 'Private',
-      coverImageUrl: json['cover_image_url'],
       createdAt: DateTime.parse(json['created_at']),
+      coverImageUrl:
+          (json['collection_images'] != null &&
+              (json['collection_images'] as List).isNotEmpty)
+          ? (json['collection_images'] as List)
+                .map((img) => img['image_url'] as String)
+                .toList()[0]
+          : null,
     );
   }
 

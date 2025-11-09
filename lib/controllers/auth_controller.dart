@@ -11,10 +11,12 @@ enum AuthState { initial, loading, authenticated, unauthenticated, error }
 
 class AuthController extends GetxController {
   final AuthService _authService = AuthService();
+  final supabase = Supabase.instance.client;
 
   final Rx<AuthState> _state = AuthState.initial.obs;
   final Rxn<UserModel> _user = Rxn<UserModel>();
   final RxnString _errorMessage = RxnString();
+  final Rx<User?> currentUser = Rx<User?>(null);
 
   AuthState get state => _state.value;
   UserModel? get user => _user.value;
@@ -27,14 +29,20 @@ class AuthController extends GetxController {
   void onInit() {
     super.onInit();
     _initializeAuth();
+    initializeAuthWithSupabase();
+  }
+
+  initializeAuthWithSupabase() async {
+    currentUser.value = supabase.auth.currentUser;
+    supabase.auth.onAuthStateChange.listen((data) {
+      currentUser.value = data.session?.user;
+    });
   }
 
   /// ✅ Initialize authentication state (auto-login if valid session)
   Future<void> _initializeAuth() async {
     _setState(AuthState.loading);
     try {
-      final supabase = Supabase.instance.client;
-
       // 1️⃣ Check if current session exists (user already logged in)
       final currentSession = supabase.auth.currentSession;
       if (currentSession != null) {

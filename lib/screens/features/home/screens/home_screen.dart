@@ -6,7 +6,6 @@ import 'package:klektion/utils/color_constants.dart';
 import '../../collections/controllers/collections_controller.dart';
 import '../../collections/screens/collections_screen.dart';
 import '../controllers/dashboard_controller.dart';
-import '../models/collection_model.dart';
 
 /// 🏠 Responsive Home Screen
 class HomeScreen extends StatelessWidget {
@@ -240,59 +239,59 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Collection card (with image error handling)
-  Widget _buildCollectionCard(
-    BuildContext context,
-    CollectionModel c, {
-    bool isTablet = false,
-  }) {
-    final imageSize = isTablet ? 100.0 : 80.0;
+  // Widget _buildCollectionCard(
+  //   BuildContext context,
+  //   CollectionModel c, {
+  //   bool isTablet = false,
+  // }) {
+  //   final imageSize = isTablet ? 100.0 : 80.0;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            c.imageUrl,
-            width: imageSize,
-            height: imageSize,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: imageSize,
-                height: imageSize,
-                color: Colors.grey.shade800,
-                child: const Icon(Icons.broken_image, color: Colors.white54),
-              );
-            },
-          ),
-        ),
-        title: Text(
-          c.title,
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        subtitle: Text(
-          "${c.itemsCount} items",
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.accent.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            "\$${c.value.toStringAsFixed(0)}",
-            style: const TextStyle(color: AppColors.accent),
-          ),
-        ),
-      ),
-    );
-  }
+  //   return Container(
+  //     margin: const EdgeInsets.only(bottom: 12),
+  //     decoration: BoxDecoration(
+  //       color: AppColors.card,
+  //       borderRadius: BorderRadius.circular(16),
+  //     ),
+  //     child: ListTile(
+  //       leading: ClipRRect(
+  //         borderRadius: BorderRadius.circular(8),
+  //         child: Image.network(
+  //           c.imageUrl,
+  //           width: imageSize,
+  //           height: imageSize,
+  //           fit: BoxFit.cover,
+  //           errorBuilder: (context, error, stackTrace) {
+  //             return Container(
+  //               width: imageSize,
+  //               height: imageSize,
+  //               color: Colors.grey.shade800,
+  //               child: const Icon(Icons.broken_image, color: Colors.white54),
+  //             );
+  //           },
+  //         ),
+  //       ),
+  //       title: Text(
+  //         c.title,
+  //         style: const TextStyle(color: AppColors.textPrimary),
+  //       ),
+  //       subtitle: Text(
+  //         "${c.itemsCount} items",
+  //         style: const TextStyle(color: AppColors.textSecondary),
+  //       ),
+  //       trailing: Container(
+  //         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  //         decoration: BoxDecoration(
+  //           color: AppColors.accent.withOpacity(0.2),
+  //           borderRadius: BorderRadius.circular(8),
+  //         ),
+  //         child: Text(
+  //           "\$${c.value.toStringAsFixed(0)}",
+  //           style: const TextStyle(color: AppColors.accent),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   /// Bottom navigation
   Widget _buildBottomNav() {
