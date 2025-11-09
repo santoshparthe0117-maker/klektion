@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:klektion/controllers/image_controller.dart';
+import 'package:klektion/screens/features/account/controllers/categories_controller.dart';
+import 'package:klektion/screens/features/account/models/category_model.dart';
 import 'package:klektion/screens/features/collections/controllers/collections_controller.dart';
 import 'package:klektion/screens/features/collections/models/collection_model.dart';
 import 'package:klektion/screens/features/items/models/items_model.dart';
@@ -25,6 +27,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       Get.find<CollectionController>();
   final ItemController _itemController = Get.put(ItemController());
   final ImageController _imageController = ImageController();
+  final CategoryController _categoryController = Get.find<CategoryController>();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -33,9 +36,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final priceCtrl = TextEditingController();
   final valueCtrl = TextEditingController();
 
-  String? selectedCategory;
+  CategoryModel? selectedCategory;
   CollectionModel? selectedCollection;
   String selectedPrivacy = 'Private';
+  bool isLoading = true;
 
   final goldGradient = const LinearGradient(
     colors: [Color(0xFFFFE29F), Color(0xFFD4AF37), Color(0xFFB08A0B)],
@@ -48,12 +52,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     {"name": "Public", "id": "public"},
   ];
 
-  List<Map<String, dynamic>> categoryList = [
-    {"name": "Watch", "id": "watch"},
-    {"name": "Comic", "id": "comic"},
-    {"name": "Art", "id": "art"},
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -62,8 +60,26 @@ class _AddItemScreenState extends State<AddItemScreen> {
       descCtrl.text = widget.item!.description ?? '';
       priceCtrl.text = widget.item!.purchasePrice?.toString() ?? '';
       valueCtrl.text = widget.item!.estimatedValue?.toString() ?? '';
+      selectedCategory = _categoryController.categories.firstWhere(
+        (c) => c.categoryId == widget.item!.categoryId,
+      );
+      selectedCollection = _collectionController.collections.firstWhere(
+        (c) => c.collectionId == widget.item!.collectionId,
+      );
+      selectedPrivacy = widget.item!.visibility == 'public'
+          ? 'Public'
+          : 'Private';
+      images = widget.item!.images.map((e) => XFile(e)).toList();
     }
-    _collectionController.getCollections();
+    initData();
+  }
+
+  initData() async {
+    await _collectionController.getCollections();
+    await _categoryController.fetchCategories();
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -134,12 +150,16 @@ class _AddItemScreenState extends State<AddItemScreen> {
               _input("Item Name", "e.g., Rolex Submariner", nameCtrl),
               _dropdown(
                 "Category",
-                categoryList,
-                (v) => selectedCategory = v['name'],
+                _categoryController.categories
+                    .map((c) => {'name': c.name, 'id': c.categoryId})
+                    .toList(),
+                (v) => selectedCategory = _categoryController.categories
+                    .firstWhere((c) => c.categoryId == v['id']),
                 selectedCategory != null
-                    ? categoryList.firstWhere(
-                        (c) => c['name'] == selectedCategory,
-                      )
+                    ? {
+                        'name': selectedCategory?.name,
+                        'id': selectedCategory?.categoryId,
+                      }
                     : null,
               ),
               _dropdown(
@@ -209,7 +229,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                             name: nameCtrl.text.trim(),
                             collectionId:
                                 selectedCollection?.collectionId ?? '',
-                            categoryId: selectedCategory ?? '',
+                            // "5a98cb59-54b5-49d9-af4f-4a06e9b36363", // TODO: dynamic later
+                            categoryId: selectedCategory?.categoryId ?? '',
+                            // 'add6f410-21c9-4980-8a52-9873bc9c36b6',
                             purchasePrice: double.tryParse(priceCtrl.text),
                             estimatedValue: double.tryParse(valueCtrl.text),
                             description: descCtrl.text.trim(),
