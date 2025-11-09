@@ -1,24 +1,55 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:klektion/screens/features/items/models/items_model.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../controllers/items_controller.dart';
 
-class AddItemScreen extends StatelessWidget {
-  final ItemController c = Get.put(ItemController());
+class AddItemScreen extends StatefulWidget {
+  final ItemModel? item;
+  const AddItemScreen({super.key, this.item});
+
+  @override
+  State<AddItemScreen> createState() => _AddItemScreenState();
+}
+
+class _AddItemScreenState extends State<AddItemScreen> {
+  final ItemController _itemController = Get.put(ItemController());
 
   final nameCtrl = TextEditingController();
+
   final descCtrl = TextEditingController();
+
   final priceCtrl = TextEditingController();
+
   final valueCtrl = TextEditingController();
 
   final RxString selectedCategory = ''.obs;
+
   final RxString selectedCollection = ''.obs;
+
   final RxString selectedPrivacy = 'Private'.obs;
 
   final goldGradient = const LinearGradient(
     colors: [Color(0xFFFFE29F), Color(0xFFD4AF37), Color(0xFFB08A0B)],
   );
+
+  List<XFile> images = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item != null) {
+      print(widget.item?.toString());
+      nameCtrl.text = widget.item!.name;
+      descCtrl.text = widget.item!.description ?? '';
+      priceCtrl.text = widget.item!.purchasePrice?.toString() ?? '';
+      valueCtrl.text = widget.item!.estimatedValue?.toString() ?? '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,46 +70,47 @@ class AddItemScreen extends StatelessWidget {
             const Text("Photos", style: TextStyle(color: Colors.white)),
             const SizedBox(height: 8),
 
-            Obx(
-              () => Row(
-                children: [
-                  GestureDetector(
-                    onTap: c.pickImage,
-                    child: Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Colors.white24,
-                          style: BorderStyle.solid,
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    images = await _itemController.pickImage();
 
-                  ...c.images.map(
-                    (file) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(
-                          file,
-                          width: 70,
-                          height: 70,
-                          fit: BoxFit.cover,
-                        ),
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  },
+                  child: Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white24,
+                        style: BorderStyle.solid,
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(Icons.camera_alt, color: Colors.white70),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                ...images.map(
+                  (file) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(file.path),
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),
@@ -100,10 +132,18 @@ class AddItemScreen extends StatelessWidget {
 
             Obx(
               () => GestureDetector(
-                onTap: c.isLoading.value
+                onTap: _itemController.isLoading.value
                     ? null
                     : () async {
-                        bool ok = await c.addItem(
+                        _itemController.isLoading.value = true;
+                        List<String> imageUrls = await _itemController
+                            .uploadImages(images);
+                        if (imageUrls.isEmpty) {
+                          _itemController.isLoading.value = false;
+                          Get.snackbar("Error", "Failed to upload images");
+                          return;
+                        }
+                        bool result = await _itemController.addItem(
                           name: nameCtrl.text.trim(),
                           collectionId:
                               "5a98cb59-54b5-49d9-af4f-4a06e9b36363", // TODO: dynamic later
@@ -112,10 +152,12 @@ class AddItemScreen extends StatelessWidget {
                           estimatedValue: double.tryParse(valueCtrl.text),
                           description: descCtrl.text.trim(),
                           visibility: selectedPrivacy.value.toLowerCase(),
+                          imageUrls: imageUrls,
                         );
 
-                        if (ok) {
-                          Get.back();
+                        if (result) {
+                          Get.closeAllSnackbars();
+                          Get.back(result: true);
                           Get.snackbar("Success", "Item added to collection");
                         } else {
                           Get.snackbar("Error", "Failed to add item");
@@ -129,7 +171,7 @@ class AddItemScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: c.isLoading.value
+                    child: _itemController.isLoading.value
                         ? const CircularProgressIndicator(color: Colors.black)
                         : const Text(
                             "Add to Collection",

@@ -4,11 +4,17 @@ import '../../../../utils/color_constants.dart';
 import '../controllers/items_controller.dart';
 import 'add_items_screen.dart';
 
-class ItemsScreen extends StatelessWidget {
-  final ItemController itemController = Get.put(ItemController());
-  final TextEditingController searchController = TextEditingController();
+class ItemsScreen extends StatefulWidget {
+  const ItemsScreen({super.key});
 
-  ItemsScreen({super.key});
+  @override
+  State<ItemsScreen> createState() => _ItemsScreenState();
+}
+
+class _ItemsScreenState extends State<ItemsScreen> {
+  final ItemController itemController = Get.put(ItemController());
+
+  final TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +29,16 @@ class ItemsScreen extends StatelessWidget {
 
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accent,
-        onPressed: () => Get.to(() => AddItemScreen()),
+        onPressed: () async {
+          // TODO: Add item screen
+          bool? result = await Get.to(() => AddItemScreen());
+          if (result == true) {
+            await itemController.getItemsByUser();
+            if (mounted) {
+              setState(() {});
+            }
+          }
+        },
         child: const Icon(Icons.add, color: Colors.black),
       ),
 
@@ -139,9 +154,18 @@ class ItemsScreen extends StatelessWidget {
                       trailing: PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert, color: Colors.white),
                         color: Colors.white,
-                        onSelected: (value) {
+                        onSelected: (value) async {
                           if (value == "edit") {
                             // TODO Edit item page
+                            bool? result = await Get.to(
+                              () => AddItemScreen(item: item),
+                            );
+                            if (result == true) {
+                              await itemController.getItemsByUser();
+                              if (mounted) {
+                                setState(() {});
+                              }
+                            }
                           } else if (value == "delete") {
                             itemController.deleteItems(item.itemId);
                           }
