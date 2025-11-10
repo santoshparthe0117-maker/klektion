@@ -23,7 +23,7 @@ class ProfileScreen extends StatelessWidget {
     double statCardSize = (size.width - (hPad * 2) - (isTablet ? 40 : 24)) / 3;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0E1A1A),
+      backgroundColor: AppColors.themeColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

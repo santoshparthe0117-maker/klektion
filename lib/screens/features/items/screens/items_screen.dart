@@ -19,16 +19,26 @@ class _ItemsScreenState extends State<ItemsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0E1A1A),
+      backgroundColor: AppColors.themeColor,
       appBar: AppBar(
         title: const Text('My Items', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF0E1A1A),
+        centerTitle: true,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+
+        // ✅ add gradient here
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFD4AF37), Color(0xFFB38A2D)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent,
+        backgroundColor: AppColors.primaryColor,
         onPressed: () async {
           // TODO: Add item screen
           bool? result = await Get.to(() => AddItemScreen());

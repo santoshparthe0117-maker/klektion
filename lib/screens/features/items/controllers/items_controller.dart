@@ -7,9 +7,11 @@ class ItemController extends GetxController {
   final SupabaseClient supabase = Supabase.instance.client;
 
   RxList<ItemModel> itemList = <ItemModel>[].obs;
+  RxList<ItemModel> recentItemList = <ItemModel>[].obs;
   RxList<ItemModel> filteredItems = <ItemModel>[].obs;
 
   var isLoading = false.obs;
+  var isRecentLoading = false.obs;
   var categories = [].obs;
   var subCategories = [].obs;
   var selectedCategory;
@@ -75,6 +77,35 @@ class ItemController extends GetxController {
       print('❌ Error fetching items: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> getRecentItems() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
+    try {
+      isRecentLoading.value = true;
+
+      if (userId == null) {
+        print("⚠️ No logged-in user");
+        return;
+      }
+
+      final response = await supabase
+          .from('items')
+          .select('*, item_images(image_url)')
+          .eq('user_id', userId)
+          .eq('is_deleted', false)
+          .order('created_at', ascending: false)
+          .limit(3);
+
+      final data = response as List<dynamic>;
+
+      recentItemList.value = data.map((e) => ItemModel.fromJson(e)).toList();
+    } catch (e) {
+      print('❌ Error fetching recent items: $e');
+    } finally {
+      isRecentLoading.value = false;
     }
   }
 

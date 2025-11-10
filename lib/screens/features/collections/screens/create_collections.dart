@@ -26,6 +26,10 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
   File? coverImage;
   String privacy = 'Public';
 
+  final goldGradient = const LinearGradient(
+    colors: [Color(0xFFFFE29F), Color(0xFFD4AF37), Color(0xFFB08A0B)],
+  );
+
   Future<void> _saveCollection() async {
     if (!_formKey.currentState!.validate()) return;
 

@@ -42,13 +42,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
   bool isLoading = true;
 
   final goldGradient = const LinearGradient(
-    colors: [Color(0xFFFFE29F), Color(0xFFD4AF37), Color(0xFFB08A0B)],
+    colors: [Color(0xFFB08A0B), Color(0xFFD4AF37), Color(0xFFFFE29F)],
   );
 
   List<XFile> images = [];
 
   List<Map<String, dynamic>> privacyList = [
     {"name": "Private", "id": "private"},
+    {"name": "Friends only", "id": "Friends only"},
     {"name": "Public", "id": "public"},
   ];
 

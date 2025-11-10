@@ -1,13 +1,13 @@
-import 'dart:io';
 import 'package:get/get.dart';
-import 'package:klektion/utils/constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/collection_model.dart';
 
 class CollectionController extends GetxController {
   final supabase = Supabase.instance.client;
   final RxList<CollectionModel> collections = <CollectionModel>[].obs;
+  final RxList<CollectionModel> recentCollections = <CollectionModel>[].obs;
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingRecent = false.obs;
 
   Future<void> getCollections() async {
     final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
@@ -27,6 +27,33 @@ class CollectionController extends GetxController {
       print("Get collections error: $e");
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> getRecentCollectionsWithItemCount() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+
+    try {
+      isLoadingRecent.value = true;
+
+      final response = await supabase
+          .from('collections')
+          .select('''
+          *,
+          collection_images(image_url),
+          items(count)
+        ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(3);
+
+      recentCollections.value = (response as List)
+          .map((e) => CollectionModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      print("Get collections error: $e");
+    } finally {
+      isLoadingRecent.value = false;
     }
   }
 

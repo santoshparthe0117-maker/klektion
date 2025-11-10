@@ -1,17 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:klektion/screens/features/collections/screens/create_collections.dart';
+import 'package:klektion/screens/features/items/controllers/items_controller.dart';
+import 'package:klektion/screens/features/items/screens/items_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../../collections/controllers/collections_controller.dart';
+import '../../collections/models/collection_model.dart';
 import '../../collections/screens/collections_screen.dart';
+import '../../items/models/items_model.dart';
 import '../controllers/dashboard_controller.dart';
 
 /// 🏠 Responsive Home Screen
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final dashboardController = Get.find<DashboardController>();
 
-  HomeScreen({super.key});
+  final CollectionController collectionController =
+      Get.find<CollectionController>();
+  final ItemController itemController = Get.find<ItemController>();
+
+  final goldGradient = const LinearGradient(
+    colors: [Color(0xFFFFE29F), Color(0xFFD4AF37), Color(0xFFB08A0B)],
+  );
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    ever(collectionController.isLoadingRecent, (_) {
+      setState(() {});
+    });
+
+    ever(collectionController.recentCollections, (_) {
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,33 +164,42 @@ class HomeScreen extends StatelessWidget {
                         child: Column(
                           children: [
                             const SizedBox(height: 24),
-                            _sectionHeader("My Collections"),
+                            _sectionHeader(
+                              "My Collections",
+                              CollectionsScreen(),
+                            ),
                             const SizedBox(height: 8),
 
-                            // Collections list
-                            // Column(
-                            //   children: collectionController.myCollections
-                            //       .map(
-                            //         (c) => _buildCollectionCard(
-                            //           context,
-                            //           c,
-                            //           isTablet: isTablet,
-                            //         ),
-                            //       )
-                            //       .toList(),
-                            // ),
+                            //  Collections list
+                            if (collectionController.isLoadingRecent.value)
+                              const Center(child: CircularProgressIndicator())
+                            else if (collectionController
+                                .recentCollections
+                                .isEmpty)
+                              const Center(child: Text("No collections found"))
+                            else
+                              Column(
+                                children: collectionController.recentCollections
+                                    .map(
+                                      (c) => _buildCollectionCard(context, c),
+                                    )
+                                    .toList(),
+                              ),
+
                             const SizedBox(height: 24),
 
-                            _sectionHeader("Recent Items"),
+                            _sectionHeader("Recent Items", ItemsScreen()),
                             const SizedBox(height: 8),
-                            const Center(
-                              child: Text(
-                                "No recent items yet",
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
+                            if (itemController.isRecentLoading.value)
+                              const Center(child: CircularProgressIndicator())
+                            else if (itemController.recentItemList.isEmpty)
+                              const Center(child: Text("No recent items found"))
+                            else
+                              Column(
+                                children: itemController.recentItemList
+                                    .map((item) => buildRecentItemCard(item))
+                                    .toList(),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -213,7 +253,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Section header
-  Widget _sectionHeader(String title) {
+  Widget _sectionHeader(String title, Widget route) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -227,7 +267,7 @@ class HomeScreen extends StatelessWidget {
         ),
         InkWell(
           onTap: () {
-            Get.to(() => CollectionsScreen());
+            Get.to(() => route);
           },
           child: const Text(
             "View All",
@@ -238,78 +278,137 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// Collection card (with image error handling)
-  // Widget _buildCollectionCard(
-  //   BuildContext context,
-  //   CollectionModel c, {
-  //   bool isTablet = false,
-  // }) {
-  //   final imageSize = isTablet ? 100.0 : 80.0;
+  Widget buildRecentItemCard(ItemModel item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E2A22),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Thumbnail
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: item.images.isNotEmpty
+                ? Image.network(
+                    item.images.first,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey.shade800,
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey.shade800,
+                    child: const Icon(Icons.image, color: Colors.white70),
+                  ),
+          ),
 
-  //   return Container(
-  //     margin: const EdgeInsets.only(bottom: 12),
-  //     decoration: BoxDecoration(
-  //       color: AppColors.card,
-  //       borderRadius: BorderRadius.circular(16),
-  //     ),
-  //     child: ListTile(
-  //       leading: ClipRRect(
-  //         borderRadius: BorderRadius.circular(8),
-  //         child: Image.network(
-  //           c.imageUrl,
-  //           width: imageSize,
-  //           height: imageSize,
-  //           fit: BoxFit.cover,
-  //           errorBuilder: (context, error, stackTrace) {
-  //             return Container(
-  //               width: imageSize,
-  //               height: imageSize,
-  //               color: Colors.grey.shade800,
-  //               child: const Icon(Icons.broken_image, color: Colors.white54),
-  //             );
-  //           },
-  //         ),
-  //       ),
-  //       title: Text(
-  //         c.title,
-  //         style: const TextStyle(color: AppColors.textPrimary),
-  //       ),
-  //       subtitle: Text(
-  //         "${c.itemsCount} items",
-  //         style: const TextStyle(color: AppColors.textSecondary),
-  //       ),
-  //       trailing: Container(
-  //         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-  //         decoration: BoxDecoration(
-  //           color: AppColors.accent.withOpacity(0.2),
-  //           borderRadius: BorderRadius.circular(8),
-  //         ),
-  //         child: Text(
-  //           "\$${c.value.toStringAsFixed(0)}",
-  //           style: const TextStyle(color: AppColors.accent),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
+          const SizedBox(width: 12),
 
-  /// Bottom navigation
-  Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      backgroundColor: AppColors.card,
-      selectedItemColor: AppColors.accent,
-      unselectedItemColor: AppColors.textSecondary,
-      showUnselectedLabels: true,
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.add_circle_outline),
-          label: "Add",
-        ),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      ],
+          // Text Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                Text(
+                  item.name ?? "",
+                  style: const TextStyle(fontSize: 14, color: Colors.white70),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  "\$${item.estimatedValue?.toStringAsFixed(0) ?? '0'}",
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFFFFD77A),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+  // Collection card (with image error handling)
+  Widget _buildCollectionCard(
+    BuildContext context,
+    CollectionModel collection, {
+    bool isTablet = false,
+  }) {
+    final imageSize = isTablet ? 100.0 : 80.0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(
+            collection.coverImageUrl ?? '',
+            width: imageSize,
+            height: imageSize,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: imageSize,
+                height: imageSize,
+                color: Colors.grey.shade800,
+                child: const Icon(Icons.broken_image, color: Colors.white54),
+              );
+            },
+          ),
+        ),
+        title: Text(
+          collection.name,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        subtitle: Text(
+          "${collection.itemCount} items",
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.accent.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text("", style: const TextStyle(color: AppColors.accent)),
+        ),
+      ),
+    );
+  }
+
+  /// Bottom navigation
 }

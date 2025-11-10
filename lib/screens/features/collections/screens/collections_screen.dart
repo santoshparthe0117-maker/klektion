@@ -7,6 +7,9 @@ import 'create_collections.dart';
 
 class CollectionsScreen extends StatelessWidget {
   final CollectionController controller = Get.put(CollectionController());
+  final goldGradient = const LinearGradient(
+    colors: [Color(0xFFB08A0B), Color(0xFFD4AF37), Color(0xFFFFE29F)],
+  );
 
   CollectionsScreen({super.key});
 
@@ -34,21 +37,29 @@ class CollectionsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ElevatedButton.icon(
-                onPressed: () => Get.to(() => CreateCollectionScreen()),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => Get.to(() => CreateCollectionScreen()),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: goldGradient,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-                icon: const Icon(Icons.add),
-                label: const Text(
-                  "Create New Collection",
-                  style: TextStyle(color: Colors.black),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.add, color: Colors.black),
+                      SizedBox(width: 8),
+                      Text(
+                        "Create New Collection",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+
               const SizedBox(height: 16),
               ...controller.collections
                   .map((c) => _buildCollectionCard(context, c))

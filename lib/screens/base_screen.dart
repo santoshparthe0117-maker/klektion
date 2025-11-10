@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:klektion/screens/features/collections/controllers/collections_controller.dart';
 import 'package:klektion/screens/features/items/controllers/items_controller.dart';
 import '../utils/color_constants.dart';
 import 'features/account/screens/account_screen.dart';
@@ -15,7 +16,10 @@ class BaseScreen extends StatefulWidget {
 }
 
 class _BaseScreenState extends State<BaseScreen> {
-  final ItemController itemController = Get.put(ItemController());
+  final ItemController itemController = Get.find<ItemController>();
+  final CollectionController collectionController =
+      Get.find<CollectionController>();
+
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
@@ -37,6 +41,8 @@ class _BaseScreenState extends State<BaseScreen> {
     // TODO: implement initState
     super.initState();
 
+    collectionController.getRecentCollectionsWithItemCount();
+    itemController.getRecentItems();
     itemController.getItemsByUser();
   }
 
