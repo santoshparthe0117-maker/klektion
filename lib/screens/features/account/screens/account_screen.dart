@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:klektion/screens/features/auth/screens/signin_screen.dart';
+import 'package:klektion/screens/features/auth/screens/signup_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../../../../controllers/auth_controller.dart';
@@ -16,134 +18,191 @@ class ProfileScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
-    double hPad = isTablet ? 24 : 16;
+    double hPad = isTablet ? 24 : 14;
     double avatarSize = isTablet ? 90 : 70;
     double titleSize = isTablet ? 26 : 20;
     double subtitleSize = isTablet ? 15 : 13;
     double statCardSize = (size.width - (hPad * 2) - (isTablet ? 40 : 24)) / 3;
 
+    final goldGradient = const LinearGradient(
+      colors: [
+        Color.fromARGB(153, 114, 101, 73),
+        Color.fromARGB(137, 108, 89, 28),
+        Color.fromARGB(130, 167, 130, 9),
+      ],
+    );
+
     return Scaffold(
       backgroundColor: AppColors.themeColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          "Profile",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: isTablet ? 24 : 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.settings, color: Colors.white),
-            iconSize: isTablet ? 30 : 22,
-          ),
-        ],
-      ),
 
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(hPad),
+        // padding: EdgeInsets.all(hPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              decoration: BoxDecoration(
-                gradient: goldGradient,
-                borderRadius: BorderRadius.circular(isTablet ? 20 : 14),
-              ),
-              padding: EdgeInsets.all(isTablet ? 20 : 14),
-              child: Row(
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              decoration: BoxDecoration(gradient: goldGradient),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: avatarSize / 2,
-                    backgroundImage: NetworkImage(
-                      "https://avatars.githubusercontent.com/u/583231?v=4",
+                  SizedBox(height: MediaQuery.of(context).padding.top),
+                  Text(
+                    "Profile",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isTablet ? 24 : 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(width: isTablet ? 16 : 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user?.name ?? "Collector",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: titleSize,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        user?.email ?? "",
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: subtitleSize,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? 12 : 10,
-                          vertical: isTablet ? 6 : 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          "Premium Member",
-                          style: TextStyle(
-                            color: Colors.amber,
-                            fontSize: subtitleSize,
+                  SizedBox(height: 5),
+                  Container(
+                    decoration: BoxDecoration(
+                      //  gradient: goldGradient,
+                      borderRadius: BorderRadius.circular(isTablet ? 20 : 14),
+                    ),
+                    padding: EdgeInsets.all(isTablet ? 10 : 5),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: avatarSize / 2,
+                          backgroundImage: NetworkImage(
+                            "https://avatars.githubusercontent.com/u/583231?v=4",
                           ),
                         ),
-                      ),
+                        SizedBox(width: isTablet ? 16 : 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user?.name ?? "Collector",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: titleSize,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              user?.email ?? "",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: subtitleSize,
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            // Container(
+                            //   padding: EdgeInsets.symmetric(
+                            //     horizontal: isTablet ? 12 : 10,
+                            //     vertical: isTablet ? 6 : 4,
+                            //   ),
+                            //   decoration: BoxDecoration(
+                            //     color: Colors.black.withOpacity(0.25),
+                            //     borderRadius: BorderRadius.circular(12),
+                            //   ),
+                            //   child: Text(
+                            //     "Premium Member",
+                            //     style: TextStyle(
+                            //       color: Colors.amber,
+                            //       fontSize: subtitleSize,
+                            //     ),
+                            //   ),
+                            // ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: isTablet ? 24 : 18),
+
+                  // Stats Cards Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _statsCard("188", "Items", statCardSize, isTablet),
+                      _statsCard("1.2k", "Followers", statCardSize, isTablet),
+                      _statsCard("345", "Following", statCardSize, isTablet),
                     ],
                   ),
+                  SizedBox(height: 15),
                 ],
               ),
             ),
 
-            SizedBox(height: isTablet ? 24 : 18),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildGradientCard(
+                    icon: Icons.category,
+                    title: "Manage Categories",
+                    onTap: () {
+                      final userId = authController.user?.userId ?? "";
+                      Get.to(() => CategoriesScreen());
+                    },
+                  ),
+                  SizedBox(height: isTablet ? 28 : 20),
+                  _sectionTitle("Privacy Controls", isTablet),
+                  _toggleTile("Public Profile", isTablet),
+                  _toggleTile("Show Item Values", isTablet),
+                  _toggleTile("Allow Comments", isTablet),
 
-            // Stats Cards Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _statsCard("188", "Items", statCardSize, isTablet),
-                _statsCard("1.2k", "Followers", statCardSize, isTablet),
-                _statsCard("345", "Following", statCardSize, isTablet),
-              ],
+                  SizedBox(height: isTablet ? 28 : 20),
+                  _sectionTitle("Social Activity", isTablet),
+                  _statLine(Icons.favorite, "Total Likes", "2,345", isTablet),
+                  _statLine(Icons.comment, "Comments", "567", isTablet),
+                  _statLine(Icons.share, "Shares", "123", isTablet),
+
+                  SizedBox(height: isTablet ? 28 : 20),
+                  _sectionTitle("Backup & Export", isTablet),
+                  _button("Export to CSV", isTablet),
+                  _button("Export to PDF", isTablet),
+                  _button("Cloud Backup", isTablet),
+
+                  GestureDetector(
+                    onTap: () => _showLogoutConfirm(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 18,
+                      ),
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFFE53935), // deep red
+                            Color(0xFFF44336), // lighter red
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        border: Border.all(
+                          color: const Color.fromARGB(173, 201, 170, 97),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.logout, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            "Logout",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-
-            _buildGradientCard(
-              icon: Icons.category,
-              title: "Manage Categories",
-              onTap: () {
-                final userId = authController.user?.userId ?? "";
-                Get.to(() => CategoriesScreen());
-              },
-            ),
-
-            SizedBox(height: isTablet ? 28 : 20),
-            _sectionTitle("Privacy Controls", isTablet),
-            _toggleTile("Public Profile", isTablet),
-            _toggleTile("Show Item Values", isTablet),
-            _toggleTile("Allow Comments", isTablet),
-
-            SizedBox(height: isTablet ? 28 : 20),
-            _sectionTitle("Social Activity", isTablet),
-            _statLine(Icons.favorite, "Total Likes", "2,345", isTablet),
-            _statLine(Icons.comment, "Comments", "567", isTablet),
-            _statLine(Icons.share, "Shares", "123", isTablet),
-
-            SizedBox(height: isTablet ? 28 : 20),
-            _sectionTitle("Backup & Export", isTablet),
-            _button("Export to CSV", isTablet),
-            _button("Export to PDF", isTablet),
-            _button("Cloud Backup", isTablet),
           ],
         ),
       ),
@@ -159,11 +218,14 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1B2A2B),
         borderRadius: BorderRadius.circular(tab ? 16 : 12),
+        border: Border.all(color: AppColors.accent),
       ),
       child: Column(
         children: [
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: Colors.white,
               fontSize: tab ? 22 : 18,
@@ -329,6 +391,108 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showLogoutConfirm() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.logout, color: Colors.red, size: 32),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Title
+              const Text(
+                "Logout",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                "Are you sure you want to logout?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: Colors.black87),
+              ),
+
+              const SizedBox(height: 24),
+
+              Row(
+                children: [
+                  // Cancel Button
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(color: Colors.grey.shade400),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () => Get.back(),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(color: Colors.black87),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // Logout Button
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 2,
+                      ),
+                      onPressed: () async {
+                        Get.back(); // Close dialog first
+
+                        final success = await Get.find<AuthController>()
+                            .logout();
+
+                        if (success) {
+                          Get.offAll(() => SignInScreen());
+                        } else {
+                          Get.snackbar(
+                            "Error",
+                            "Logout failed, try again!",
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        }
+                      },
+                      child: const Text(
+                        "Logout",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

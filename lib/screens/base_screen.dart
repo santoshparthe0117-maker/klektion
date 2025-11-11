@@ -5,6 +5,7 @@ import 'package:klektion/screens/features/collections/controllers/collections_co
 import 'package:klektion/screens/features/items/controllers/items_controller.dart';
 import '../utils/color_constants.dart';
 import 'features/account/screens/account_screen.dart';
+import 'features/discover/screens/discover_screen.dart';
 import 'features/home/screens/home_screen.dart' hide AppColors;
 import 'features/items/screens/items_screen.dart';
 
@@ -24,7 +25,7 @@ class _BaseScreenState extends State<BaseScreen> {
 
   final List<Widget> _screens = [
     HomeScreen(),
-    OrdersTabScreen(),
+    DiscoverScreen(),
     ItemsScreen(),
 
     ProfileScreen(),
@@ -54,7 +55,7 @@ class _BaseScreenState extends State<BaseScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.themeColor,
+        selectedItemColor: AppColors.primaryColor,
         unselectedItemColor: Colors.grey,
         selectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         unselectedLabelStyle: GoogleFonts.poppins(),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../controllers/collections_controller.dart';
+import 'collection_details.dart';
 import 'create_collections.dart';
 
 class CollectionsScreen extends StatelessWidget {
@@ -72,9 +73,12 @@ class CollectionsScreen extends StatelessWidget {
   }
 
   Widget _buildCollectionCard(BuildContext context, dynamic collection) {
-    return Card(
-      color: const Color(0xFF1B2B25),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B2B25),
+        borderRadius: BorderRadius.circular(12),
+        border: BoxBorder.all(color: const Color.fromARGB(255, 114, 100, 52)),
+      ),
       margin: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,10 +135,44 @@ class CollectionsScreen extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
+                Divider(color: const Color.fromARGB(255, 121, 112, 91)),
+
                 const SizedBox(height: 8),
-                Text(
-                  "Privacy: ${collection.privacy}",
-                  style: const TextStyle(color: Colors.amber, fontSize: 13),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "Privacy: ${collection.privacy}",
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+
+                    InkWell(
+                      onTap: () {
+                        Get.to(
+                          () => CollectionDetailsScreen(collection: collection),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          "View Details",
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -7,11 +7,16 @@ class ItemController extends GetxController {
   final SupabaseClient supabase = Supabase.instance.client;
 
   RxList<ItemModel> itemList = <ItemModel>[].obs;
+  RxList<ItemModel> itemListByCollection = <ItemModel>[].obs;
   RxList<ItemModel> recentItemList = <ItemModel>[].obs;
   RxList<ItemModel> filteredItems = <ItemModel>[].obs;
+  final Rxn<ItemModel> selectedItem = Rxn<ItemModel>();
 
   var isLoading = false.obs;
+  var isLoadingByCollection = false.obs;
+
   var isRecentLoading = false.obs;
+  var isLoadingItemDetails = false.obs;
   var categories = [].obs;
   var subCategories = [].obs;
   var selectedCategory;
@@ -49,6 +54,49 @@ class ItemController extends GetxController {
       categories.clear();
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> getItemsByCollection(String collectionId) async {
+    try {
+      isLoadingByCollection.value = true;
+
+      final response = await supabase
+          .from('items')
+          .select('*, item_images(image_url)')
+          .eq('collection_id', collectionId)
+          .eq('is_deleted', false)
+          .order('created_at', ascending: false);
+
+      final data = response as List<dynamic>;
+
+      itemListByCollection.value = data
+          .map((e) => ItemModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      print("Error fetching items for collection: $e");
+    } finally {
+      isLoadingByCollection.value = false;
+    }
+  }
+
+  Future<void> getItemDetails(String itemId) async {
+    try {
+      isLoadingItemDetails.value = true;
+
+      final response = await supabase
+          .from('items')
+          .select('*, item_images(image_url)')
+          .eq('item_id', itemId)
+          .maybeSingle();
+
+      if (response != null) {
+        selectedItem.value = ItemModel.fromJson(response);
+      }
+    } catch (e) {
+      print("Error fetching item details: $e");
+    } finally {
+      isLoadingItemDetails.value = false;
     }
   }
 
@@ -182,6 +230,63 @@ class ItemController extends GetxController {
       return true;
     } catch (e) {
       print("Add item error: $e");
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> updateItem({
+    required String itemId,
+    required String name,
+    required String collectionId,
+    required String? categoryId,
+    required double? purchasePrice,
+    required double? estimatedValue,
+    required String description,
+    required String visibility,
+    DateTime? acquisitionDate,
+    String? condition,
+    required List<String> imageUrls, // final updated list
+  }) async {
+    try {
+      isLoading.value = true;
+
+      // ✅ Validate user
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        print("⚠️ User not logged in");
+        return false;
+      }
+
+      // ✅ Data to update
+      final itemData = {
+        'collection_id': collectionId,
+        'category_id': categoryId,
+        'name': name,
+        'description': description,
+        'purchase_price': purchasePrice,
+        'estimated_value': estimatedValue,
+        'acquisition_date': acquisitionDate?.toIso8601String(),
+        'condition': condition,
+        'visibility': visibility,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      // ✅ Update main item row
+      await supabase.from('items').update(itemData).eq('item_id', itemId);
+
+      // ✅ Remove old image records (but do NOT delete from storage)
+      await supabase.from('item_images').delete().eq('item_id', itemId);
+
+      // ✅ Add new image records
+      for (var imageUrl in imageUrls) {
+        await _saveImageRecord(imageUrl, itemId);
+      }
+
+      return true;
+    } catch (e) {
+      print("Update item error: $e");
       return false;
     } finally {
       isLoading.value = false;

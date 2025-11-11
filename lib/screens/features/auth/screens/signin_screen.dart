@@ -77,7 +77,7 @@ class _SignInScreenState extends State<SignInScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -124,7 +124,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 // Form Container
                 Container(
@@ -133,7 +133,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     vertical: 24,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2B352C).withOpacity(0.6),
+                    color: Colors.white.withOpacity(0.05),
                     border: Border.all(
                       color: const Color(0xFFD4AF37).withOpacity(0.3),
                     ),
@@ -243,9 +243,13 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                             ),
                             child: _isLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
+                                ? Container(
+                                    height: 15,
+                                    width: 15,
+                                    child: const CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : Text(
                                     'Sign In',

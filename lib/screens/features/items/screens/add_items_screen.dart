@@ -56,9 +56,20 @@ class _AddItemScreenState extends State<AddItemScreen> {
   @override
   void initState() {
     super.initState();
+
+    initData();
+  }
+
+  initData() async {
+    await _collectionController.getCollections();
+    await _categoryController.fetchCategories();
+    setState(() {
+      isLoading = false;
+    });
+
     if (widget.item != null) {
       nameCtrl.text = widget.item!.name;
-      descCtrl.text = widget.item!.description ?? '';
+      descCtrl.text = widget.item!.description!;
       priceCtrl.text = widget.item!.purchasePrice?.toString() ?? '';
       valueCtrl.text = widget.item!.estimatedValue?.toString() ?? '';
       selectedCategory = _categoryController.categories.firstWhere(
@@ -72,15 +83,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
           : 'Private';
       images = widget.item!.images.map((e) => XFile(e)).toList();
     }
-    initData();
-  }
-
-  initData() async {
-    await _collectionController.getCollections();
-    await _categoryController.fetchCategories();
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override

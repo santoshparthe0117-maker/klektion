@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../utils/color_constants.dart';
 import '../controllers/items_controller.dart';
 import 'add_items_screen.dart';
+import 'item_details_screen.dart';
 
 class ItemsScreen extends StatefulWidget {
   const ItemsScreen({super.key});
@@ -106,93 +107,101 @@ class _ItemsScreenState extends State<ItemsScreen> {
                       ? item.images.first
                       : null;
 
-                  return Card(
-                    color: const Color(0xFF122021),
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(
-                        color: AppColors.accent.withOpacity(0.4),
-                      ),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(12),
-
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: image != null
-                            ? Image.network(
-                                image,
-                                width: 60,
-                                height: 60,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _placeholder(),
-                              )
-                            : _placeholder(),
-                      ),
-
-                      title: Text(
-                        item.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                  return InkWell(
+                    onTap: () {
+                      Get.to(() => ItemDetailsScreen(itemId: item.itemId));
+                    },
+                    child: Card(
+                      color: const Color(0xFF122021),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        side: BorderSide(
+                          color: AppColors.accent.withOpacity(0.4),
                         ),
                       ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          if (item.estimatedValue != null)
-                            Text(
-                              "Value: \$${item.estimatedValue!.toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                          if (item.purchasePrice != null)
-                            Text(
-                              "Purchase: \$${item.purchasePrice!.toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                color: Colors.white38,
-                                fontSize: 12,
-                              ),
-                            ),
-                        ],
-                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(12),
 
-                      trailing: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: Colors.white),
-                        color: Colors.white,
-                        onSelected: (value) async {
-                          if (value == "edit") {
-                            // TODO Edit item page
-                            bool? result = await Get.to(
-                              () => AddItemScreen(item: item),
-                            );
-                            if (result == true) {
-                              await itemController.getItemsByUser();
-                              if (mounted) {
-                                setState(() {});
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: image != null
+                              ? Image.network(
+                                  image,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => _placeholder(),
+                                )
+                              : _placeholder(),
+                        ),
+
+                        title: Text(
+                          item.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            if (item.estimatedValue != null)
+                              Text(
+                                "Value: \$${item.estimatedValue!.toStringAsFixed(2)}",
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            if (item.purchasePrice != null)
+                              Text(
+                                "Purchase: \$${item.purchasePrice!.toStringAsFixed(2)}",
+                                style: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
+                        ),
+
+                        trailing: PopupMenuButton<String>(
+                          icon: const Icon(
+                            Icons.more_vert,
+                            color: Colors.white,
+                          ),
+                          color: Colors.white,
+                          onSelected: (value) async {
+                            if (value == "edit") {
+                              // TODO Edit item page
+                              bool? result = await Get.to(
+                                () => AddItemScreen(item: item),
+                              );
+                              if (result == true) {
+                                await itemController.getItemsByUser();
+                                if (mounted) {
+                                  setState(() {});
+                                }
                               }
+                            } else if (value == "delete") {
+                              itemController.deleteItems(item.itemId);
                             }
-                          } else if (value == "delete") {
-                            itemController.deleteItems(item.itemId);
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          const PopupMenuItem(
-                            value: "edit",
-                            child: Text("Edit"),
-                          ),
-                          const PopupMenuItem(
-                            value: "delete",
-                            child: Text(
-                              "Delete",
-                              style: TextStyle(color: Colors.red),
+                          },
+                          itemBuilder: (_) => [
+                            const PopupMenuItem(
+                              value: "edit",
+                              child: Text("Edit"),
                             ),
-                          ),
-                        ],
+                            const PopupMenuItem(
+                              value: "delete",
+                              child: Text(
+                                "Delete",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );

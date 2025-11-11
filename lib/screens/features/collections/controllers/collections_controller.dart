@@ -14,9 +14,14 @@ class CollectionController extends GetxController {
 
     try {
       isLoading.value = true;
+
       final response = await supabase
           .from('collections')
-          .select('*, collection_images(image_url)')
+          .select('''
+          *,
+          collection_images(image_url),
+          items(count)
+        ''')
           .eq('user_id', userId)
           .order('created_at', ascending: false);
 

@@ -108,7 +108,7 @@ class AuthService {
         final response = await _client
             .from(_userTableName)
             .select()
-            .eq('id', session!.user.id)
+            .eq('user_id', session!.user.id)
             .single();
 
         return UserModel.fromJson(response);

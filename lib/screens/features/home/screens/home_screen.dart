@@ -5,10 +5,13 @@ import 'package:klektion/screens/features/items/controllers/items_controller.dar
 import 'package:klektion/screens/features/items/screens/items_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
+import '../../../../controllers/auth_controller.dart';
 import '../../collections/controllers/collections_controller.dart';
 import '../../collections/models/collection_model.dart';
+import '../../collections/screens/collection_details.dart';
 import '../../collections/screens/collections_screen.dart';
 import '../../items/models/items_model.dart';
+import '../../items/screens/item_details_screen.dart';
 import '../controllers/dashboard_controller.dart';
 
 /// 🏠 Responsive Home Screen
@@ -21,6 +24,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final dashboardController = Get.find<DashboardController>();
+  final authController = Get.find<AuthController>();
 
   final CollectionController collectionController =
       Get.find<CollectionController>();
@@ -42,6 +46,14 @@ class _HomeScreenState extends State<HomeScreen> {
     ever(collectionController.recentCollections, (_) {
       setState(() {});
     });
+
+    ever(itemController.isRecentLoading, (_) {
+      setState(() {});
+    });
+
+    ever(itemController.recentItemList, (_) {
+      setState(() {});
+    });
   }
 
   @override
@@ -53,163 +65,173 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.themeColor,
-      body: SafeArea(
-        child: GetBuilder<DashboardController>(
-          builder: (_) {
-            return GetBuilder<CollectionController>(
-              builder: (_) {
-                return SingleChildScrollView(
-                  // padding: EdgeInsets.symmetric(
-                  //   // horizontal: horizontalPadding,
-                  //   vertical: 16,
-                  // ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header Section
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                          vertical: 16,
+      body: GetBuilder<DashboardController>(
+        builder: (_) {
+          return GetBuilder<CollectionController>(
+            builder: (_) {
+              return SingleChildScrollView(
+                // padding: EdgeInsets.symmetric(
+                //   // horizontal: horizontalPadding,
+                //   vertical: 16,
+                // ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Section
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          bottomRight: Radius.circular(10),
                         ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(10),
-                          ),
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color.fromARGB(60, 212, 175, 55),
-                              AppColors.themeColor,
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color.fromARGB(60, 212, 175, 55),
+                            AppColors.themeColor,
+                          ],
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: MediaQuery.of(context).padding.top),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "My Collection",
+                                style: TextStyle(
+                                  color: AppColors.accent,
+                                  fontSize: fontSize + 4,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              // const CircleAvatar(
+                              //   backgroundColor: AppColors.accent,
+                              //   radius: 18,
+                              //   child: Icon(
+                              //     Icons.emoji_events,
+                              //     color: Colors.black,
+                              //   ),
+                              // ),
                             ],
                           ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "My Collection",
-                                  style: TextStyle(
-                                    color: AppColors.accent,
-                                    fontSize: fontSize + 4,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          Column(children: [const SizedBox(height: 4)]),
+                          Obx(() {
+                            final user = authController.user;
+
+                            if (user == null) {
+                              return Text(
+                                "Welcome back...",
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: fontSize - 2,
                                 ),
-                                const CircleAvatar(
-                                  backgroundColor: AppColors.accent,
-                                  radius: 18,
-                                  child: Icon(
-                                    Icons.emoji_events,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(children: [const SizedBox(height: 4)]),
-                            Text(
-                              "Welcome back, Collector",
+                              );
+                            }
+
+                            return Text(
+                              "Welcome back, ${user.name}",
                               style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: fontSize - 2,
                               ),
-                            ),
-                            const SizedBox(height: 16),
+                            );
+                          }),
+                          const SizedBox(height: 16),
 
-                            // Dashboard cards (responsive grid)
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                int crossAxisCount = isTablet ? 3 : 3;
-                                double cardWidth =
-                                    (constraints.maxWidth - 24) /
-                                    crossAxisCount;
+                          // Dashboard cards (responsive grid)
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              int crossAxisCount = isTablet ? 3 : 3;
+                              double cardWidth =
+                                  (constraints.maxWidth - 24) / crossAxisCount;
 
-                                final dashboardData =
-                                    dashboardController.dashboardData;
+                              final dashboardData =
+                                  dashboardController.dashboardData;
 
-                                return Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    _buildDashboardCard(
-                                      "Items",
-                                      "${dashboardData.value!.monthlyChange}",
-                                      cardWidth,
-                                    ),
-                                    _buildDashboardCard(
-                                      "Total Value",
-                                      "\$${dashboardData.value!.totalItems}k",
-                                      cardWidth,
-                                    ),
-                                    _buildDashboardCard(
-                                      "This Month",
-                                      "+${dashboardData.value!.totalValue}%",
-                                      cardWidth,
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                              return Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  _buildDashboardCard(
+                                    "Items",
+                                    "${dashboardData.value!.monthlyChange}",
+                                    cardWidth,
+                                    Icons.inventory_2_outlined,
+                                  ),
+                                  _buildDashboardCard(
+                                    "Total Value",
+                                    "\$${dashboardData.value!.totalItems}k",
+                                    cardWidth,
+                                    Icons.attach_money,
+                                  ),
+                                  _buildDashboardCard(
+                                    "This Month",
+                                    "+${dashboardData.value!.totalValue}%",
+                                    cardWidth,
+                                    Icons.trending_up,
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                       ),
+                    ),
 
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                          vertical: 16,
-                        ),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 24),
-                            _sectionHeader(
-                              "My Collections",
-                              CollectionsScreen(),
-                            ),
-                            const SizedBox(height: 8),
-
-                            //  Collections list
-                            if (collectionController.isLoadingRecent.value)
-                              const Center(child: CircularProgressIndicator())
-                            else if (collectionController
-                                .recentCollections
-                                .isEmpty)
-                              const Center(child: Text("No collections found"))
-                            else
-                              Column(
-                                children: collectionController.recentCollections
-                                    .map(
-                                      (c) => _buildCollectionCard(context, c),
-                                    )
-                                    .toList(),
-                              ),
-
-                            const SizedBox(height: 24),
-
-                            _sectionHeader("Recent Items", ItemsScreen()),
-                            const SizedBox(height: 8),
-                            if (itemController.isRecentLoading.value)
-                              const Center(child: CircularProgressIndicator())
-                            else if (itemController.recentItemList.isEmpty)
-                              const Center(child: Text("No recent items found"))
-                            else
-                              Column(
-                                children: itemController.recentItemList
-                                    .map((item) => buildRecentItemCard(item))
-                                    .toList(),
-                              ),
-                          ],
-                        ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 16,
                       ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 24),
+                          _sectionHeader("My Collections", CollectionsScreen()),
+                          const SizedBox(height: 8),
+
+                          //  Collections list
+                          if (collectionController.isLoadingRecent.value)
+                            const Center(child: CircularProgressIndicator())
+                          else if (collectionController
+                              .recentCollections
+                              .isEmpty)
+                            const Center(child: Text("No collections found"))
+                          else
+                            Column(
+                              children: collectionController.recentCollections
+                                  .map((c) => _buildCollectionCard(context, c))
+                                  .toList(),
+                            ),
+
+                          const SizedBox(height: 24),
+
+                          _sectionHeader("Recent Items", ItemsScreen()),
+                          const SizedBox(height: 8),
+                          if (itemController.isRecentLoading.value)
+                            const Center(child: CircularProgressIndicator())
+                          else if (itemController.recentItemList.isEmpty)
+                            const Center(child: Text("No recent items found"))
+                          else
+                            Column(
+                              children: itemController.recentItemList
+                                  .map((item) => buildRecentItemCard(item))
+                                  .toList(),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accent,
@@ -220,7 +242,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Dashboard card (Items / Value / Growth)
-  Widget _buildDashboardCard(String title, String value, double width) {
+  Widget _buildDashboardCard(
+    String title,
+    String value,
+    double width,
+    IconData icon,
+  ) {
     return Container(
       width: width,
       padding: const EdgeInsets.all(12),
@@ -231,8 +258,13 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(icon, size: 28, color: AppColors.accent),
+          const SizedBox(height: 8),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 16,
@@ -279,81 +311,87 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget buildRecentItemCard(ItemModel item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E2A22),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Thumbnail
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: item.images.isNotEmpty
-                ? Image.network(
-                    item.images.first,
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+    return InkWell(
+      onTap: () {
+        Get.to(() => ItemDetailsScreen(itemId: item.itemId));
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E2A22),
+          borderRadius: BorderRadius.circular(12),
+          border: BoxBorder.all(color: const Color.fromARGB(255, 114, 100, 52)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: item.images.isNotEmpty
+                  ? Image.network(
+                      item.images.first,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.grey.shade800,
+                        child: const Icon(
+                          Icons.image_not_supported,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    )
+                  : Container(
                       width: 60,
                       height: 60,
                       color: Colors.grey.shade800,
-                      child: const Icon(
-                        Icons.image_not_supported,
-                        color: Colors.white70,
-                      ),
+                      child: const Icon(Icons.image, color: Colors.white70),
                     ),
-                  )
-                : Container(
-                    width: 60,
-                    height: 60,
-                    color: Colors.grey.shade800,
-                    child: const Icon(Icons.image, color: Colors.white70),
-                  ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Text Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-
-                Text(
-                  item.name ?? "",
-                  style: const TextStyle(fontSize: 14, color: Colors.white70),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  "\$${item.estimatedValue?.toStringAsFixed(0) ?? '0'}",
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: Color(0xFFFFD77A),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
             ),
-          ),
-        ],
+
+            const SizedBox(width: 12),
+
+            // Text Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  Text(
+                    item.name ?? "",
+                    style: const TextStyle(fontSize: 14, color: Colors.white70),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    "\$${item.estimatedValue?.toStringAsFixed(0) ?? '0'}",
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFFFFD77A),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -366,45 +404,51 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     final imageSize = isTablet ? 100.0 : 80.0;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            collection.coverImageUrl ?? '',
-            width: imageSize,
-            height: imageSize,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: imageSize,
-                height: imageSize,
-                color: Colors.grey.shade800,
-                child: const Icon(Icons.broken_image, color: Colors.white54),
-              );
-            },
-          ),
+    return InkWell(
+      onTap: () {
+        Get.to(() => CollectionDetailsScreen(collection: collection));
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: BoxBorder.all(color: const Color.fromARGB(255, 114, 100, 52)),
         ),
-        title: Text(
-          collection.name,
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        subtitle: Text(
-          "${collection.itemCount} items",
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.accent.withOpacity(0.2),
+        child: ListTile(
+          leading: ClipRRect(
             borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              collection.coverImageUrl ?? '',
+              width: imageSize,
+              height: imageSize,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: imageSize,
+                  height: imageSize,
+                  color: Colors.grey.shade800,
+                  child: const Icon(Icons.broken_image, color: Colors.white54),
+                );
+              },
+            ),
           ),
-          child: Text("", style: const TextStyle(color: AppColors.accent)),
+          title: Text(
+            collection.name,
+            style: const TextStyle(color: AppColors.textPrimary),
+          ),
+          subtitle: Text(
+            "${collection.itemCount} items",
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text("", style: const TextStyle(color: AppColors.accent)),
+          ),
         ),
       ),
     );

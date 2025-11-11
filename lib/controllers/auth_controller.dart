@@ -28,80 +28,113 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _initializeAuth();
-    initializeAuthWithSupabase();
+    // initializeAuthWithSupabase();
+    // _initializeAuth();
+    initializeAuth();
   }
 
-  initializeAuthWithSupabase() async {
-    currentUser.value = supabase.auth.currentUser;
-    supabase.auth.onAuthStateChange.listen((data) {
-      currentUser.value = data.session?.user;
-    });
-  }
+  // initializeAuthWithSupabase() async {
+  //   currentUser.value = supabase.auth.currentUser;
+  //   supabase.auth.onAuthStateChange.listen((data) {
+  //     currentUser.value = data.session?.user;
 
-  /// ✅ Initialize authentication state (auto-login if valid session)
-  Future<void> _initializeAuth() async {
+  //   });
+  // }
+
+  // /// ✅ Initialize authentication state (auto-login if valid session)
+  // Future<void> _initializeAuth() async {
+  //   _setState(AuthState.loading);
+  //   try {
+  //     // 1️⃣ Check if current session exists (user already logged in)
+  //     final currentSession = supabase.auth.currentSession;
+  //     if (currentSession != null) {
+  //       final userData = await _authService.getCurrentUser();
+  //       if (userData != null) {
+  //         _user.value = userData;
+  //         _setState(AuthState.authenticated);
+  //         return;
+  //       }
+  //     }
+
+  //     // 2️⃣ Recover saved session (if app was closed and reopened)
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final storedSessionJson = prefs.getString('supabase_session');
+
+  //     if (storedSessionJson != null) {
+  //       // Convert JSON string to Session object
+  //       final sessionMap = jsonDecode(storedSessionJson);
+  //       final recoveredSession = Session.fromJson(sessionMap);
+
+  //       final response = await supabase.auth.recoverSession(
+  //         recoveredSession as String,
+  //       );
+
+  //       if (response.session != null) {
+  //         // ✅ Save refreshed session for next time
+  //         await prefs.setString(
+  //           'supabase_session',
+  //           jsonEncode(response.session!.toJson()),
+  //         );
+
+  //         final userData = await _authService.getCurrentUser();
+  //         if (userData != null) {
+  //           _user.value = userData;
+  //           _setState(AuthState.authenticated);
+  //           return;
+  //         }
+  //       }
+  //     }
+
+  //     _setState(AuthState.unauthenticated);
+  //   } catch (e) {
+  //     _setError('Failed to initialize authentication: ${e.toString()}');
+  //   }
+  // }
+
+  Future<void> initializeAuth() async {
     _setState(AuthState.loading);
+
     try {
-      // 1️⃣ Check if current session exists (user already logged in)
-      final currentSession = supabase.auth.currentSession;
-      if (currentSession != null) {
-        final userData = await _authService.getCurrentUser();
-        if (userData != null) {
-          _user.value = userData;
+      // ✅ Check if user is already logged in
+      final session = supabase.auth.currentSession;
+
+      if (session != null) {
+        currentUser.value = session.user;
+
+        // ✅ Fetch full user profile
+        final profile = await _authService.getCurrentUser();
+        if (profile != null) {
+          _user.value = profile;
           _setState(AuthState.authenticated);
           return;
         }
       }
 
-      // 2️⃣ Recover saved session (if app was closed and reopened)
-      final prefs = await SharedPreferences.getInstance();
-      final storedSessionJson = prefs.getString('supabase_session');
+      // ✅ Listen for session changes (login/logout/token refresh)
+      supabase.auth.onAuthStateChange.listen((event) async {
+        final session = event.session;
 
-      if (storedSessionJson != null) {
-        // Convert JSON string to Session object
-        final sessionMap = jsonDecode(storedSessionJson);
-        final recoveredSession = Session.fromJson(sessionMap);
+        if (session != null) {
+          // ✅ User logged in
+          currentUser.value = session.user;
 
-        final response = await supabase.auth.recoverSession(
-          recoveredSession as String,
-        );
-
-        if (response.session != null) {
-          // ✅ Save refreshed session for next time
-          await prefs.setString(
-            'supabase_session',
-            jsonEncode(response.session!.toJson()),
-          );
-
-          final userData = await _authService.getCurrentUser();
-          if (userData != null) {
-            _user.value = userData;
+          final profile = await _authService.getCurrentUser();
+          if (profile != null) {
+            _user.value = profile;
             _setState(AuthState.authenticated);
-            return;
           }
+        } else {
+          // ✅ User logged out
+          currentUser.value = null;
+          _user.value = null;
+          _setState(AuthState.unauthenticated);
         }
-      }
+      });
 
+      // ✅ No active session
       _setState(AuthState.unauthenticated);
     } catch (e) {
-      _setError('Failed to initialize authentication: ${e.toString()}');
-    }
-  }
-
-  Future<bool> checkVendorExists(String userId) async {
-    try {
-      final response = await Supabase.instance.client
-          .from('vendors')
-          .select('vendor_id')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      // If response is not null → vendor record exists
-      return response != null;
-    } catch (e) {
-      debugPrint('Error checking vendor: $e');
-      return false;
+      _setError("Auth initialization failed: $e");
     }
   }
 
@@ -242,32 +275,55 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<Map<String, dynamic>?> getVendorByUserId(String userId) async {
+  Future<bool> loadUserProfile(String userId) async {
     try {
-      final response = await Supabase.instance.client
-          .from('vendors')
+      final userResponse = await Supabase.instance.client
+          .from('users')
           .select()
           .eq('user_id', userId)
           .maybeSingle();
 
-      if (response != null) {
-        return Map<String, dynamic>.from(response);
+      if (userResponse == null) {
+        _setError("User record not found in database");
+        return false;
       }
-      return null;
+
+      final userModel = UserModel.fromJson(userResponse);
+
+      _user.value = userModel;
+
+      debugPrint("✅ User model loaded successfully: ${userModel.name}");
+      return true;
     } catch (e) {
-      Get.snackbar('Error', e.toString());
-      return null;
+      debugPrint("❌ Error loading user profile: $e");
+      _setError("Failed to load user details");
+      return false;
     }
   }
 
-  Future<void> signOut() async {
-    _setState(AuthState.loading);
+  Future<bool> logout() async {
     try {
-      await _authService.signOut();
+      // 🔹 1. Supabase logout
+      await Supabase.instance.client.auth.signOut();
+
+      // 🔹 2. Clear SharedPrefs
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear(); // ✅ deletes all locally stored data
+
+      // 🔹 3. Clear user data in controller
       _user.value = null;
+      currentUser.value = null;
+
+      // 🔹 4. Reset auth state
       _setState(AuthState.unauthenticated);
+
+      // 🔹 5. Delete all GetX controllers
+      Get.deleteAll(force: true);
+
+      return true; // ✅ logout success
     } catch (e) {
-      _setError('Sign out error: ${e.toString()}');
+      debugPrint("Logout error: $e");
+      return false;
     }
   }
 
