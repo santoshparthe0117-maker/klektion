@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:klektion/screens/features/collections/controllers/collections_controller.dart';
 import 'package:klektion/screens/features/items/controllers/items_controller.dart';
+import 'package:klektion/screens/features/wish_list/controller/wish_list_controller.dart';
 import '../utils/color_constants.dart';
 import 'features/account/screens/account_screen.dart';
 import 'features/discover/screens/discover_screen.dart';
-import 'features/home/screens/home_screen.dart' hide AppColors;
+import 'features/home/controllers/dashboard_controller.dart';
+import 'features/home/screens/home_screen.dart';
 import 'features/items/screens/items_screen.dart';
 
 class BaseScreen extends StatefulWidget {
@@ -20,6 +22,9 @@ class _BaseScreenState extends State<BaseScreen> {
   final ItemController itemController = Get.find<ItemController>();
   final CollectionController collectionController =
       Get.find<CollectionController>();
+  final WishlistController wishlistController = Get.find<WishlistController>();
+  final DashboardController dashboardController =
+      Get.find<DashboardController>();
 
   int _selectedIndex = 0;
 
@@ -39,12 +44,12 @@ class _BaseScreenState extends State<BaseScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-
+    dashboardController.fetchDashboardData();
     collectionController.getRecentCollectionsWithItemCount();
     itemController.getRecentItems();
     itemController.getItemsByUser();
+    wishlistController.fetchRecentItems();
   }
 
   @override

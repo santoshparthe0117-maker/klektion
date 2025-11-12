@@ -4,15 +4,13 @@ import '../models/dashboard_model.dart';
 
 class DashboardController extends GetxController {
   final supabase = Supabase.instance.client;
-  final dashboardData = Rxn<DashboardModel>();
 
-  @override
-  void onInit() {
-    fetchDashboardData();
-    super.onInit();
-  }
+  final dashboardData = Rxn<DashboardModel>();
+  final isDashboardLoading = true.obs; // ✅ added loading flag
 
   Future<void> fetchDashboardData() async {
+    isDashboardLoading.value = true; // ✅ start loading
+
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
       dashboardData.value = DashboardModel(
@@ -20,6 +18,7 @@ class DashboardController extends GetxController {
         totalValue: 0.0,
         monthlyChange: 0.0,
       );
+      isDashboardLoading.value = false; // ✅ stop loading
       return;
     }
 
@@ -48,8 +47,6 @@ class DashboardController extends GetxController {
             totalValue += value;
           } else if (value is num) {
             totalValue += value.toDouble();
-          } else {
-            // ignore invalid types
           }
         }
       }
@@ -81,13 +78,15 @@ class DashboardController extends GetxController {
         monthlyChange: monthlyChange,
       );
     } catch (e) {
-      // fallback data if error occurs
+      print("Dashboard error: $e");
+
       dashboardData.value = DashboardModel(
         totalItems: 0,
         totalValue: 0.0,
         monthlyChange: 0.0,
       );
-      print("Dashboard error: $e");
+    } finally {
+      isDashboardLoading.value = false; // ✅ always stop loading
     }
   }
 }

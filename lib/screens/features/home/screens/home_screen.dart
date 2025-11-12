@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:klektion/screens/features/collections/screens/create_collections.dart';
 import 'package:klektion/screens/features/items/controllers/items_controller.dart';
 import 'package:klektion/screens/features/items/screens/items_screen.dart';
+import 'package:klektion/screens/features/wish_list/screens/wish_list_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../../../../controllers/auth_controller.dart';
@@ -12,6 +13,7 @@ import '../../collections/screens/collection_details.dart';
 import '../../collections/screens/collections_screen.dart';
 import '../../items/models/items_model.dart';
 import '../../items/screens/item_details_screen.dart';
+import '../../wish_list/controller/wish_list_controller.dart';
 import '../controllers/dashboard_controller.dart';
 
 /// 🏠 Responsive Home Screen
@@ -29,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final CollectionController collectionController =
       Get.find<CollectionController>();
   final ItemController itemController = Get.find<ItemController>();
+  final WishlistController wishlistController = Get.find<WishlistController>();
 
   final goldGradient = const LinearGradient(
     colors: [Color(0xFFFFE29F), Color(0xFFD4AF37), Color(0xFFB08A0B)],
@@ -52,6 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     ever(itemController.recentItemList, (_) {
+      setState(() {});
+    });
+    ever(wishlistController.isLoadingRecent, (_) {
+      setState(() {});
+    });
+
+    ever(wishlistController.recentWishliItems, (_) {
       setState(() {});
     });
   }
@@ -145,41 +155,52 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 16),
 
                           // Dashboard cards (responsive grid)
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              int crossAxisCount = isTablet ? 3 : 3;
-                              double cardWidth =
-                                  (constraints.maxWidth - 24) / crossAxisCount;
-
-                              final dashboardData =
-                                  dashboardController.dashboardData;
-
-                              return Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  _buildDashboardCard(
-                                    "Items",
-                                    "${dashboardData.value!.monthlyChange}",
-                                    cardWidth,
-                                    Icons.inventory_2_outlined,
-                                  ),
-                                  _buildDashboardCard(
-                                    "Total Value",
-                                    "\$${dashboardData.value!.totalItems}k",
-                                    cardWidth,
-                                    Icons.attach_money,
-                                  ),
-                                  _buildDashboardCard(
-                                    "This Month",
-                                    "+${dashboardData.value!.totalValue}%",
-                                    cardWidth,
-                                    Icons.trending_up,
-                                  ),
-                                ],
+                          Obx(() {
+                            if (dashboardController.isDashboardLoading.value) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
                               );
-                            },
-                          ),
+                            }
+
+                            final data =
+                                dashboardController.dashboardData.value;
+                            if (data == null) {
+                              return Center(child: Container());
+                            }
+
+                            return LayoutBuilder(
+                              builder: (context, constraints) {
+                                double cardWidth =
+                                    (constraints.maxWidth - 24) /
+                                    3; // 3 cards always
+
+                                return Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    _buildDashboardCard(
+                                      "Items",
+                                      "${data.totalItems}",
+                                      cardWidth,
+                                      Icons.inventory,
+                                    ),
+                                    _buildDashboardCard(
+                                      "Total Value",
+                                      "\$${data.totalValue}",
+                                      cardWidth,
+                                      Icons.attach_money,
+                                    ),
+                                    _buildDashboardCard(
+                                      "This Month",
+                                      "+${data.monthlyChange}",
+                                      cardWidth,
+                                      Icons.trending_up,
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          }),
                         ],
                       ),
                     ),
@@ -223,6 +244,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                   .map((item) => buildRecentItemCard(item))
                                   .toList(),
                             ),
+                          const SizedBox(height: 24),
+
+                          _sectionHeader("Wish list", WishlistScreen()),
+                          const SizedBox(height: 8),
+                          if (wishlistController.isLoadingRecent.value)
+                            const Center(child: CircularProgressIndicator())
+                          else if (wishlistController.recentWishliItems.isEmpty)
+                            const Center(child: Text("No wish list found"))
+                          else
+                            Column(
+                              children: wishlistController.recentWishliItems
+                                  .map((item) => buildRecentItemCard(item))
+                                  .toList(),
+                            ),
+                          const SizedBox(height: 24),
                         ],
                       ),
                     ),
@@ -233,11 +269,11 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent,
-        onPressed: () {},
-        child: const Icon(Icons.add, color: Colors.black),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: AppColors.accent,
+      //   onPressed: () {},
+      //   child: const Icon(Icons.add, color: Colors.black),
+      // ),
     );
   }
 

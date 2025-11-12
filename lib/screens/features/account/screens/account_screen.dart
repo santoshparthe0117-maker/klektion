@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:klektion/screens/features/auth/screens/signin_screen.dart';
-import 'package:klektion/screens/features/auth/screens/signup_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../../../../controllers/auth_controller.dart';
@@ -138,7 +137,6 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.category,
                     title: "Manage Categories",
                     onTap: () {
-                      final userId = authController.user?.userId ?? "";
                       Get.to(() => CategoriesScreen());
                     },
                   ),
@@ -300,7 +298,7 @@ class ProfileScreen extends StatelessWidget {
     return SwitchListTile(
       value: true,
       onChanged: (value) {},
-      activeColor: Colors.amber,
+      activeThumbColor: Colors.amber,
       title: Text(
         label,
         style: TextStyle(color: Colors.white, fontSize: isTablet ? 18 : 15),

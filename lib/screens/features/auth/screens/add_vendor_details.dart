@@ -110,7 +110,7 @@ class _AddVendorScreenState extends State<AddVendorScreen> {
       final authController = Get.find<AuthController>();
       final user = authController.user;
 
-      if (user == null || user.userId == null) {
+      if (user == null) {
         throw Exception("User ID not found. Please log in again.");
       }
 

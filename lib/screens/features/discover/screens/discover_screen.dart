@@ -5,6 +5,8 @@ import '../../../../utils/color_constants.dart';
 import '../controllers/discover_controller.dart';
 
 class DiscoverScreen extends StatefulWidget {
+  const DiscoverScreen({super.key});
+
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
 }

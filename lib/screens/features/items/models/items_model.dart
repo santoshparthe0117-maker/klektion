@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class ProductModel {
   final String productId;
   final String vendorId;
@@ -63,6 +65,9 @@ class ItemModel {
   final DateTime createdAt;
   final DateTime updatedAt;
   List<String> images;
+  int likeCount;
+  bool isLiked;
+  bool isWishlisted;
 
   ItemModel({
     required this.itemId,
@@ -78,31 +83,89 @@ class ItemModel {
     required this.isDeleted,
     required this.createdAt,
     required this.updatedAt,
+
     this.images = const [],
+    this.likeCount = 0,
+    this.isLiked = false,
+    this.isWishlisted = false,
   });
 
   factory ItemModel.fromJson(Map<String, dynamic> json) {
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
+    // ✅ Safe list extraction helper
+    List safeList(dynamic value) {
+      if (value == null) return [];
+      if (value is List) return value;
+      return [];
+    }
+
+    // ✅ Likes List
+    List likesList = safeList(json['likes']);
+    int likeCount = 0;
+    if (likesList.isNotEmpty) {
+      final countValue = likesList[0]['count'];
+      if (countValue is int)
+        likeCount = countValue;
+      else if (countValue is num)
+        likeCount = countValue.toInt();
+    }
+
+    // ✅ Is Liked check (safe)
+    bool isLiked = false;
+    final likedList = safeList(json['liked_by']);
+    if (currentUserId != null) {
+      isLiked = likedList.any(
+        (e) => e != null && e['user_id'] == currentUserId,
+      );
+    }
+
+    // ✅ Wishlist check (safe)
+    bool isWishlisted = false;
+    final wishList = safeList(json['wishlisted_by']);
+    if (currentUserId != null) {
+      isWishlisted = wishList.any(
+        (e) => e != null && e['user_id'] == currentUserId,
+      );
+    }
+
+    // ✅ Images list safe
+    List<String> images = [];
+    final imageList = safeList(json['item_images']);
+    for (var img in imageList) {
+      if (img != null && img['image_url'] != null) {
+        images.add(img['image_url']);
+      }
+    }
+
     return ItemModel(
-      itemId: json['item_id'],
-      collectionId: json['collection_id'],
-      categoryId: json['category_id'],
-      name: json['name'],
-      description: json['description'],
-      purchasePrice: (json['purchase_price'] as num?)?.toDouble(),
-      estimatedValue: (json['estimated_value'] as num?)?.toDouble(),
-      acquisitionDate: json['acquisition_date'] != null
-          ? DateTime.parse(json['acquisition_date'])
+      itemId: json['item_id']?.toString() ?? "",
+      collectionId: json['collection_id']?.toString() ?? "",
+      categoryId: json['category_id']?.toString(),
+      name: json['name']?.toString() ?? "",
+      description: json['description']?.toString(),
+      purchasePrice: json['purchase_price'] != null
+          ? (json['purchase_price'] is num
+                ? (json['purchase_price'] as num).toDouble()
+                : double.tryParse(json['purchase_price'].toString()))
           : null,
-      condition: json['condition'],
-      visibility: json['visibility'],
-      isDeleted: json['is_deleted'] ?? false,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      images: (json['item_images'] != null)
-          ? (json['item_images'] as List)
-                .map((img) => img['image_url'] as String)
-                .toList()
-          : [],
+      estimatedValue: json['estimated_value'] != null
+          ? (json['estimated_value'] is num
+                ? (json['estimated_value'] as num).toDouble()
+                : double.tryParse(json['estimated_value'].toString()))
+          : null,
+      acquisitionDate: json['acquisition_date'] != null
+          ? DateTime.tryParse(json['acquisition_date'].toString())
+          : null,
+      condition: json['condition']?.toString(),
+      visibility: json['visibility']?.toString() ?? "private",
+      isDeleted: json['is_deleted'] == true,
+      createdAt: DateTime.tryParse(json['created_at'] ?? "") ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updated_at'] ?? "") ?? DateTime.now(),
+      images: images,
+      likeCount: likeCount,
+      isLiked: isLiked,
+      isWishlisted: isWishlisted,
     );
   }
 

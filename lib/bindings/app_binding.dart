@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
+import '../controllers/auth_controller.dart';
 import '../screens/features/account/controllers/categories_controller.dart';
 import '../screens/features/collections/controllers/collections_controller.dart';
 import '../screens/features/home/controllers/dashboard_controller.dart';
 import '../screens/features/items/controllers/items_controller.dart';
+import '../screens/features/wish_list/controller/wish_list_controller.dart';
 
 class AppBindings extends Bindings {
   @override
@@ -11,5 +13,7 @@ class AppBindings extends Bindings {
     Get.put<DashboardController>(DashboardController(), permanent: true);
     Get.put<ItemController>(ItemController(), permanent: true);
     Get.put<CategoryController>(CategoryController(), permanent: true);
+    Get.put<WishlistController>(WishlistController(), permanent: true);
+    Get.put<AuthController>(AuthController(), permanent: true);
   }
 }

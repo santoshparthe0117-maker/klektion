@@ -144,10 +144,25 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Collection Name',
+                  hintStyle: TextStyle(color: Colors.white),
                   filled: true,
-                  fillColor: Colors.white,
+
+                  fillColor: Colors.transparent,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(
+                      color: Color(0xFFD4AF37),
+                      width: 1.5,
+                    ),
+                  ),
                 ),
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Enter collection name' : null,
@@ -155,11 +170,26 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Description',
                   filled: true,
-                  fillColor: Colors.white,
+                  hintStyle: const TextStyle(color: Colors.white),
+                  fillColor: Colors.transparent,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(
+                      color: Color(0xFFD4AF37),
+                      width: 1.5,
+                    ),
+                  ),
                 ),
+
                 maxLines: 3,
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Enter description' : null,

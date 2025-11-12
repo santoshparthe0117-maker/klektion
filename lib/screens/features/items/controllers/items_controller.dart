@@ -84,9 +84,18 @@ class ItemController extends GetxController {
     try {
       isLoadingItemDetails.value = true;
 
+      final userId = supabase.auth.currentUser?.id;
+
       final response = await supabase
           .from('items')
-          .select('*, item_images(image_url)')
+          .select('''
+          *,
+          item_images(image_url),
+          likes(count),
+          liked_by:likes(user_id),
+          wishlist(count),
+          wishlisted_by:wishlist(user_id)
+        ''')
           .eq('item_id', itemId)
           .maybeSingle();
 
@@ -97,6 +106,93 @@ class ItemController extends GetxController {
       print("Error fetching item details: $e");
     } finally {
       isLoadingItemDetails.value = false;
+    }
+  }
+
+  Future<void> toggleLike(String itemId) async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      final existing = await supabase
+          .from('likes')
+          .select()
+          .eq('item_id', itemId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (existing != null) {
+        // ✅ Unlike
+        await supabase
+            .from('likes')
+            .delete()
+            .eq('item_id', existing['item_id']);
+
+        selectedItem.update((item) {
+          if (item != null) {
+            item.isLiked = false;
+            item.likeCount = item.likeCount - 1;
+          }
+        });
+      } else {
+        // ✅ Like
+        await supabase.from('likes').insert({
+          'item_id': itemId,
+          'user_id': userId,
+        });
+
+        selectedItem.update((item) {
+          if (item != null) {
+            item.isLiked = true;
+            item.likeCount = item.likeCount + 1;
+          }
+        });
+      }
+    } catch (e) {
+      print("Toggle like error: $e");
+    }
+  }
+
+  Future<void> toggleWishlist(String itemId) async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      // 🔍 Check if already in wishlist
+      final existing = await supabase
+          .from('wishlist')
+          .select()
+          .eq('item_id', itemId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (existing != null) {
+        // ✅ Remove from wishlist
+        await supabase
+            .from('wishlist')
+            .delete()
+            .eq('wishlist_id', existing['wishlist_id']);
+
+        selectedItem.update((item) {
+          if (item != null) {
+            item.isWishlisted = false;
+          }
+        });
+      } else {
+        // ✅ Add to wishlist
+        await supabase.from('wishlist').insert({
+          'item_id': itemId,
+          'user_id': userId,
+        });
+
+        selectedItem.update((item) {
+          if (item != null) {
+            item.isWishlisted = true;
+          }
+        });
+      }
+    } catch (e) {
+      print("Toggle wishlist error: $e");
     }
   }
 

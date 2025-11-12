@@ -143,16 +143,26 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
             children: [
               CircleAvatar(
                 backgroundColor: Colors.black.withOpacity(0.5),
-                child: IconButton(
-                  icon: const Icon(Icons.favorite_border, color: Colors.white),
-                  onPressed: () {},
-                ),
+                child: Obx(() {
+                  final item = itemController.selectedItem.value;
+                  if (item == null) return SizedBox();
+
+                  return IconButton(
+                    icon: Icon(
+                      item.isWishlisted
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: item.isWishlisted ? Colors.red : Colors.white,
+                    ),
+                    onPressed: () => itemController.toggleWishlist(item.itemId),
+                  );
+                }),
               ),
               const SizedBox(width: 8),
               CircleAvatar(
                 backgroundColor: Colors.black.withOpacity(0.5),
                 child: PopupMenuButton<String>(
-                  color: const Color(0xFF1C3028),
+                  color: Colors.white,
                   icon: const Icon(Icons.more_vert, color: Colors.white),
                   itemBuilder: (context) => [
                     const PopupMenuItem(
@@ -200,17 +210,36 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.remove_red_eye, color: Colors.white60, size: 20),
-              const SizedBox(width: 4),
-              Text("234", style: TextStyle(color: Colors.white70)),
-              const SizedBox(width: 16),
-              Icon(Icons.favorite_border, color: Colors.white60, size: 20),
-              const SizedBox(width: 4),
-              Text("89", style: TextStyle(color: Colors.white70)),
+              // Icon(Icons.remove_red_eye, color: Colors.white60, size: 20),
+              // const SizedBox(width: 4),
+              // Text("234", style: TextStyle(color: Colors.white70)),
+              // const SizedBox(width: 16),
+              Obx(() {
+                final item = itemController.selectedItem.value;
+                if (item == null) return SizedBox();
+
+                return GestureDetector(
+                  onTap: () => itemController.toggleLike(item.itemId),
+                  child: Row(
+                    children: [
+                      Icon(
+                        item.isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: item.isLiked ? Colors.red : Colors.white60,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        item.likeCount.toString(),
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                );
+              }),
               const SizedBox(width: 16),
               Icon(Icons.comment, color: Colors.white60, size: 20),
               const SizedBox(width: 4),
-              Text("12", style: TextStyle(color: Colors.white70)),
+              Text("0", style: TextStyle(color: Colors.white70)),
             ],
           ),
         ],
