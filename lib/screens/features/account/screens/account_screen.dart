@@ -183,8 +183,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   //  _toggleTile("Allow Comments", isTablet),
                   SizedBox(height: isTablet ? 28 : 20),
                   _sectionTitle("Social Activity", isTablet),
-                  _statLine(Icons.favorite, "Total Likes", "2,345", isTablet),
-                  _statLine(Icons.comment, "Comments", "567", isTablet),
+                  Obx(
+                    () => _statLine(
+                      Icons.favorite,
+                      "Total Likes",
+                      stats.totalLikes.value.toString(),
+                      isTablet,
+                    ),
+                  ),
+
+                  Obx(
+                    () => _statLine(
+                      Icons.comment,
+                      "Comments",
+                      stats.totalComments.value.toString(),
+                      isTablet,
+                    ),
+                  ),
 
                   //  _statLine(Icons.share, "Shares", "123", isTablet),
                   SizedBox(height: isTablet ? 28 : 20),
