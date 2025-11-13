@@ -144,11 +144,12 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
+                style: const TextStyle(color: Colors.white), // <-- TEXT COLOR
                 decoration: InputDecoration(
                   labelText: 'Collection Name',
-                  hintStyle: TextStyle(color: Colors.white),
+                  labelStyle: const TextStyle(color: Colors.white),
+                  hintStyle: const TextStyle(color: Colors.white),
                   filled: true,
-
                   fillColor: Colors.transparent,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -167,13 +168,17 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Enter collection name' : null,
               ),
-              const SizedBox(height: 16),
+
+              SizedBox(height: 16),
+
               TextFormField(
                 controller: _descController,
+                style: const TextStyle(color: Colors.white), // <-- TEXT COLOR
                 decoration: InputDecoration(
                   labelText: 'Description',
-                  filled: true,
+                  labelStyle: const TextStyle(color: Colors.white),
                   hintStyle: const TextStyle(color: Colors.white),
+                  filled: true,
                   fillColor: Colors.transparent,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -203,23 +208,29 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Column(
-                children: ['Public', 'Friends Only', 'Private']
-                    .map(
-                      (option) => RadioListTile(
-                        activeColor: Colors.amber,
-                        tileColor: const Color(0xFF1B2B25),
-                        value: option,
-                        groupValue: privacy,
-                        onChanged: (v) =>
-                            setState(() => privacy = v.toString()),
-                        title: Text(
-                          option,
-                          style: const TextStyle(color: Colors.white),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.primaryColor),
+                ),
+                child: Column(
+                  children: ['Public', 'Friends Only', 'Private']
+                      .map(
+                        (option) => RadioListTile(
+                          activeColor: Colors.amber,
+                          tileColor: const Color(0xFF1B2B25),
+                          value: option,
+                          groupValue: privacy,
+                          onChanged: (v) =>
+                              setState(() => privacy = v.toString()),
+                          title: Text(
+                            option,
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(),
+                      )
+                      .toList(),
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton(

@@ -4,12 +4,26 @@ import 'package:klektion/screens/features/auth/screens/signin_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../../../../controllers/auth_controller.dart';
+import '../controllers/profile_stats_controller.dart';
 import 'categories_scrern.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   final authController = Get.find<AuthController>();
 
-  ProfileScreen({super.key});
+  final ProfileStatsController stats = Get.find<ProfileStatsController>();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    stats.fetchProfileStats();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,9 +132,30 @@ class ProfileScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _statsCard("188", "Items", statCardSize, isTablet),
-                      _statsCard("1.2k", "Followers", statCardSize, isTablet),
-                      _statsCard("345", "Following", statCardSize, isTablet),
+                      Obx(
+                        () => _statsCard(
+                          stats.totalItems.value.toString(),
+                          "Items",
+                          statCardSize,
+                          isTablet,
+                        ),
+                      ),
+                      Obx(
+                        () => _statsCard(
+                          stats.totalFollowers.value.toString(),
+                          "Followers",
+                          statCardSize,
+                          isTablet,
+                        ),
+                      ),
+                      Obx(
+                        () => _statsCard(
+                          stats.totalFollowing.value.toString(),
+                          "Following",
+                          statCardSize,
+                          isTablet,
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(height: 15),
@@ -209,7 +244,6 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // ✅ Widgets Below
-
   Widget _statsCard(String value, String title, double w, bool tab) {
     return Container(
       width: w,

@@ -5,6 +5,7 @@ import '../../../../utils/color_constants.dart';
 import '../../collections/models/collection_model.dart';
 import '../../collections/screens/collection_details.dart';
 import '../controllers/discover_controller.dart';
+import '../controllers/follows_controller.dart';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
@@ -15,6 +16,7 @@ class DiscoverScreen extends StatefulWidget {
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
   final DiscoverController controller = Get.put(DiscoverController());
+  final FollowController followController = Get.put(FollowController());
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +138,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   Widget _listView() {
     final results = controller.filteredResults;
+    followController.loadFollowStatus(results);
 
     /// ✅ When Categories tab is selected → GridView
     if (controller.selectedTab.value == 2) {
@@ -259,42 +262,83 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Widget _userCard(dynamic user) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          // CircleAvatar(
-          //   radius: 25,
-          //   backgroundImage: NetworkImage(user['avatar_url'] ?? ""),
-          // ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(user['name'], style: const TextStyle(color: Colors.white)),
-              const SizedBox(height: 4),
-              // Text(
-              //   "${user['total_items']} items • \$${user['total_value']} value",
-              //   style: const TextStyle(color: Colors.white54),
-              // ),
-            ],
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(20),
+    final userId = user['user_id'];
+
+    return Obx(() {
+      final isFollowing = followController.isFollowingMap[userId] ?? false;
+
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            // Profile Picture
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.grey.shade800,
+              backgroundImage:
+                  user['avatar_url'] != null &&
+                      user['avatar_url'].toString().isNotEmpty
+                  ? NetworkImage(user['avatar_url'])
+                  : null,
+              child: user['avatar_url'] == null
+                  ? const Icon(Icons.person, color: Colors.white70)
+                  : null,
             ),
-            child: const Text("Follow", style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
-    );
+
+            const SizedBox(width: 12),
+
+            // Name & Stats
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user['name'] ?? "",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+            ),
+
+            const Spacer(),
+
+            // FOLLOW BUTTON
+            GestureDetector(
+              onTap: () =>
+                  followController.toggleFollow(userId), // TOGGLE FOLLOW
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isFollowing ? Colors.grey.shade800 : Colors.amber,
+                  borderRadius: BorderRadius.circular(20),
+                  border: isFollowing
+                      ? Border.all(color: Colors.white54)
+                      : null,
+                ),
+                child: Text(
+                  isFollowing ? "Following" : "Follow",
+                  style: TextStyle(
+                    color: isFollowing ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _categoryCard(dynamic category) {

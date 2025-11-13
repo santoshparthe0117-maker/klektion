@@ -62,9 +62,41 @@ class CollectionsScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 16),
-              ...controller.collections
-                  .map((c) => _buildCollectionCard(context, c))
-                  .toList(),
+              Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                }
+
+                if (controller.collections.isEmpty) {
+                  return Center(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+
+                      children: [
+                        Image.asset(
+                          'assets/images/no_data_found.png',
+                          height: 150,
+                          width: 1050,
+                        ),
+                        Text(
+                          "No collections found",
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: controller.collections
+                      .map((c) => _buildCollectionCard(context, c))
+                      .toList(),
+                );
+              }),
             ],
           ),
         );
