@@ -45,5 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- ✅ Supabase OAuth redirect configuration -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- This must match your redirect scheme used in Flutter -->
+				<string>io.supabase.flutter</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../bindings/app_binding.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 
@@ -93,46 +94,135 @@ class AuthController extends GetxController {
     _setState(AuthState.loading);
 
     try {
-      // ✅ Check if user is already logged in
       final session = supabase.auth.currentSession;
 
       if (session != null) {
         currentUser.value = session.user;
 
-        // ✅ Fetch full user profile
         final profile = await _authService.getCurrentUser();
         if (profile != null) {
           _user.value = profile;
           _setState(AuthState.authenticated);
           return;
+        } else {
+          // ✅ If user logged in via Google and not found → create user
+          final newUser = await _authService.handleUserAfterOAuth();
+          if (newUser != null) {
+            _user.value = newUser;
+            _setState(AuthState.authenticated);
+            return;
+          }
         }
       }
 
-      // ✅ Listen for session changes (login/logout/token refresh)
+      // ✅ Listen for auth changes
       supabase.auth.onAuthStateChange.listen((event) async {
         final session = event.session;
 
         if (session != null) {
-          // ✅ User logged in
           currentUser.value = session.user;
 
+          // Check if user exists in DB
           final profile = await _authService.getCurrentUser();
           if (profile != null) {
             _user.value = profile;
             _setState(AuthState.authenticated);
+          } else {
+            // ✅ Create if not found (Google login case)
+            final newUser = await _authService.handleUserAfterOAuth();
+            if (newUser != null) {
+              _user.value = newUser;
+              _setState(AuthState.authenticated);
+            }
           }
         } else {
-          // ✅ User logged out
           currentUser.value = null;
           _user.value = null;
           _setState(AuthState.unauthenticated);
         }
       });
 
-      // ✅ No active session
       _setState(AuthState.unauthenticated);
     } catch (e) {
       _setError("Auth initialization failed: $e");
+    }
+  }
+
+  Future<bool> signInWithGoogle() async {
+    _setState(AuthState.loading);
+
+    try {
+      // 🔹 Step 1: Trigger Google OAuth
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'com.example.klektion://login-callback/',
+      );
+
+      // Note: After redirect Google → back to app,
+      // Supabase automatically restores session.
+
+      // 🔹 Step 2: Get updated session
+      final session =
+          Supabase.instance.client.auth.currentSession; // v2.x correct method
+      final authUser = session?.user;
+
+      if (authUser == null) {
+        _setError("Google Sign-In failed: No user session restored");
+        return false;
+      }
+
+      debugPrint("✅ Google Auth User: ${authUser.id}");
+
+      // 🔹 Step 3: Fetch or Create User Profile
+      final userResponse = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('user_id', authUser.id)
+          .maybeSingle();
+
+      UserModel userModel;
+
+      if (userResponse == null) {
+        // 🔹 Step 4: If first-time login → insert new record
+        final newUser = {
+          'user_id': authUser.id,
+          'email': authUser.email ?? '',
+          'name': authUser.userMetadata?['full_name'] ?? '',
+          'avatar_url': authUser.userMetadata?['avatar_url'] ?? '',
+          'password_hash': '',
+          'is_active': true,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+
+        final inserted = await Supabase.instance.client
+            .from('users')
+            .insert(newUser)
+            .select()
+            .single();
+
+        userModel = UserModel.fromJson(inserted);
+        debugPrint("🆕 New Google user created in DB");
+      } else {
+        userModel = UserModel.fromJson(userResponse);
+        debugPrint("🔁 Existing Google user found");
+      }
+
+      // 🔹 Step 5: Save user model in your controller
+      _user.value = userModel;
+
+      // 🔹 Step 6: Set auth state
+      _setState(AuthState.authenticated);
+
+      debugPrint("🎉 Google login completed for: ${userModel.name}");
+
+      return true;
+    } catch (e, stack) {
+      debugPrint("❌ Google Sign-In error: $e");
+      debugPrint("📌 Stack: $stack");
+
+      _setError("Google Sign-In failed. Please try again.");
+      return false;
     }
   }
 
@@ -317,6 +407,7 @@ class AuthController extends GetxController {
 
       // 🔹 5. Delete all GetX controllers
       Get.deleteAll(force: true);
+      AppBindings().dependencies();
 
       return true; // ✅ logout success
     } catch (e) {

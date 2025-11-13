@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../utils/color_constants.dart';
+import '../../collections/models/collection_model.dart';
+import '../../collections/screens/collection_details.dart';
 import '../controllers/discover_controller.dart';
 
 class DiscoverScreen extends StatefulWidget {
@@ -170,54 +172,88 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Widget _trendingCard(dynamic data) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ClipRRect(
-          //   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          //   child: Image.network(
-          //     data['collection_images']?[0]?['image_url'] ?? "",
-          //     height: 150,
-          //     width: double.infinity,
-          //     fit: BoxFit.cover,
-          //   ),
-          // ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data['name'],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Text(
-                      "${data['items_count']} items",
-                      style: const TextStyle(color: Colors.white54),
+    final collection = CollectionModel.fromJson(data);
+    return InkWell(
+      onTap: () {
+        Get.to(() => CollectionDetailsScreen(collection: collection));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
+              child: Image.network(
+                collection.coverImageUrl ?? "",
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, event) {
+                  if (event == null) return child;
+                  return Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: Colors.grey.shade800,
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(
+                      color: Colors.white54,
+                      strokeWidth: 2,
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      "1200 followers",
-                      style: const TextStyle(color: Colors.white54),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: Colors.grey.shade900,
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.broken_image,
+                      color: Colors.white54,
+                      size: 40,
                     ),
-                  ],
-                ),
-              ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['name'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Row(
+                  //   children: [
+                  //     Text(
+                  //       "${data['items_count']} items",
+                  //       style: const TextStyle(color: Colors.white54),
+                  //     ),
+                  //     const SizedBox(width: 12),
+                  //     Text(
+                  //       "1200 followers",
+                  //       style: const TextStyle(color: Colors.white54),
+                  //     ),
+                  //   ],
+                  // ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

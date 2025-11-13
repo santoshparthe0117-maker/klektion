@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -6,101 +7,96 @@ class AuthService {
   final SupabaseClient _client = Supabase.instance.client;
   static const String _userTableName = 'users';
 
-  // Sign up with mobile number as username
+  // -------------------- EMAIL / PASSWORD SIGNUP --------------------
   Future<UserModel?> signUp({
     required String name,
     required String password,
-    String? email,
-    String? avatarUrl,
-    String? bio,
+    required String email,
   }) async {
     try {
-      // 1️⃣ Create user in Supabase Auth
-      final authResponse = await _client.auth.signUp(
+      final authRes = await _client.auth.signUp(
         email: email,
         password: password,
       );
 
-      final authUser = authResponse.user;
-      if (authUser == null) {
-        throw Exception('User creation failed in Supabase Auth.');
-      }
+      final authUser = authRes.user;
+      if (authUser == null) throw Exception("Signup failed");
 
-      // 2️⃣ Create matching record in your "users" table
-      final userProfile = {
+      // Create or update profile
+      await _client.from('users').upsert({
         'user_id': authUser.id,
-        'email': email ?? '',
-        'password_hash': password, // ideally hashed
+        'email': email,
         'name': name,
-        'avatar_url': avatarUrl,
-        'bio': bio,
+        'password_hash': password,
         'is_active': true,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
-      };
+      });
 
-      // 3️⃣ Insert user profile into your "users" table
-      final insertResponse = await _client
-          .from('users')
-          .insert(userProfile)
-          .select('*')
-          .maybeSingle();
+      final profile = await getOrCreateUserProfile(authUser);
+      await _saveUserSession(profile);
 
-      // 4️⃣ If insert didn’t return data, fetch manually
-      final userData =
-          insertResponse ??
-          await _client
-              .from('users')
-              .select('*')
-              .eq('user_id', authUser.id)
-              .maybeSingle();
-
-      if (userData == null) {
-        throw Exception('User record not found after insertion.');
-      }
-
-      // 5️⃣ Return the mapped model
-      return UserModel.fromJson(userData);
-    } on PostgrestException catch (e) {
-      throw Exception('Database error: ${e.message}');
-    } on AuthException catch (e) {
-      throw Exception('Auth error: ${e.message}');
+      return profile;
     } catch (e) {
-      throw Exception('Sign up failed: ${e.toString()}');
+      throw Exception("Signup failed: $e");
     }
   }
 
-  // Sign in with mobile number
+  // -------------------- EMAIL / PASSWORD LOGIN --------------------
   Future<UserModel?> signIn({
     required String mobileNo,
     required String password,
   }) async {
     try {
-      // Sign in using mobile number as email
-      final authResponse = await _client.auth.signInWithPassword(
-        email: mobileNo, //'$mobileNo@karoorder.com',
+      final res = await _client.auth.signInWithPassword(
+        email: mobileNo,
         password: password,
       );
 
-      if (authResponse.user != null) {
-        // Get user profile from custom table
-        final response = await _client
-            .from(_userTableName)
-            .select()
-            .eq('user_id', authResponse.user!.id)
-            .single();
+      final authUser = res.user;
+      if (authUser == null) throw Exception("Invalid credentials");
 
-        final user = UserModel.fromJson(response);
-        await _saveUserSession(user);
-        return user;
-      }
+      final profile = await getOrCreateUserProfile(authUser);
+      await _saveUserSession(profile);
+
+      return profile;
     } catch (e) {
-      throw Exception('Sign in failed: ${e.toString()}');
+      throw Exception("Sign-in failed: $e");
     }
-    return null;
   }
 
-  // Get current user
+  Future<UserModel> getOrCreateUserProfile(User supabaseUser) async {
+    final existingUser = await _client
+        .from('users')
+        .select()
+        .eq('user_id', supabaseUser.id)
+        .maybeSingle();
+
+    if (existingUser != null) {
+      return UserModel.fromJson(existingUser);
+    }
+
+    final newUser = {
+      'user_id': supabaseUser.id,
+      'email': supabaseUser.email ?? '',
+      'name': supabaseUser.userMetadata?['full_name'] ?? '',
+      'avatar_url': supabaseUser.userMetadata?['avatar_url'] ?? '',
+      'password_hash': '',
+      'is_active': true,
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    final inserted = await _client
+        .from('users')
+        .insert(newUser)
+        .select()
+        .single();
+
+    return UserModel.fromJson(inserted);
+  }
+
+  // -------------------- CURRENT USER --------------------
   Future<UserModel?> getCurrentUser() async {
     try {
       final session = _client.auth.currentSession;
@@ -109,120 +105,105 @@ class AuthService {
             .from(_userTableName)
             .select()
             .eq('user_id', session!.user.id)
-            .single();
+            .maybeSingle();
 
-        return UserModel.fromJson(response);
+        if (response != null) {
+          return UserModel.fromJson(response);
+        }
       }
-    } catch (e) {
-      // If error getting from database, try local storage
-      return await _getUserFromLocal();
-    }
+    } catch (_) {}
     return null;
   }
 
-  // Sign out
+  // -------------------- SIGN OUT --------------------
   Future<void> signOut() async {
     try {
       await _client.auth.signOut();
       await _clearUserSession();
     } catch (e) {
-      throw Exception('Sign out failed: ${e.toString()}');
+      throw Exception('Sign out failed: $e');
     }
   }
 
-  // Check if user is authenticated
-  Future<bool> isAuthenticated() async {
-    final session = _client.auth.currentSession;
-    return session?.user != null;
-  }
-
-  // Save user session locally
-  Future<void> _saveUserSession(UserModel user) async {
+  // -------------------- GOOGLE SIGN-IN (NEW) --------------------
+  Future<UserModel?> signInWithGoogle() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_data', user.toJson().toString());
-    } catch (e) {
-      // Handle storage error gracefully
-    }
-  }
+      // Trigger OAuth flow
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'com.example.klektion://login-callback/',
+      );
 
-  // Get user from local storage
-  Future<UserModel?> _getUserFromLocal() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userData = prefs.getString('user_data');
-      if (userData != null) {
-        // Note: This is a simplified approach. In production, you'd want proper JSON parsing
-        return null; // Return null for now, implement proper parsing if needed
+      // Wait for Supabase to update session after OAuth redirect
+      // The app will reopen → and now we can check the current session
+
+      final session = _client.auth.currentSession;
+
+      if (session == null || session.user == null) {
+        throw Exception("Google login failed: No session");
       }
+
+      final user = session.user;
+
+      // Create or fetch user profile
+      final userModel = await getOrCreateUserProfile(user);
+
+      await _saveUserSession(userModel);
+
+      return userModel;
     } catch (e) {
-      // Handle storage error gracefully
+      Get.snackbar("Error", "Google Sign-in failed: $e");
+      return null;
     }
-    return null;
   }
 
-  // Clear user session
+  // -------------------- Handle user after OAuth --------------------
+
+  Future<UserModel?> handleUserAfterOAuth() async {
+    final session = _client.auth.currentSession;
+    final user = session?.user;
+    if (user == null) return null;
+
+    // Check if user already exists in DB
+    final existing = await _client
+        .from(_userTableName)
+        .select()
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (existing != null) {
+      return UserModel.fromJson(existing);
+    }
+
+    // If not found, insert new record
+    final newUser = {
+      'user_id': user.id,
+      'email': user.email,
+      'name': user.userMetadata?['name'] ?? user.email?.split('@').first,
+      'avatar_url': user.userMetadata?['avatar_url'],
+      'is_active': true,
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    final inserted = await _client
+        .from(_userTableName)
+        .insert(newUser)
+        .select()
+        .maybeSingle();
+
+    if (inserted == null) return null;
+    return UserModel.fromJson(inserted);
+  }
+
+  // -------------------- UTILITIES --------------------
+  Future<void> _saveUserSession(UserModel user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_data', user.toJson().toString());
+  }
+
   Future<void> _clearUserSession() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('user_data');
-    } catch (e) {
-      // Handle storage error gracefully
-    }
-  }
-
-  // Update user profile
-  Future<UserModel?> updateUserProfile({
-    required String userId,
-    String? username,
-    String? email,
-  }) async {
-    try {
-      final updates = <String, dynamic>{
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      if (username != null) updates['username'] = username;
-      if (email != null) updates['email'] = email;
-
-      final response = await _client
-          .from(_userTableName)
-          .update(updates)
-          .eq('id', userId)
-          .select()
-          .single();
-
-      return UserModel.fromJson(response);
-    } catch (e) {
-      throw Exception('Update profile failed: ${e.toString()}');
-    }
-  }
-
-  // Check if mobile number already exists
-  Future<bool> isMobileNumberExists(String mobileNo) async {
-    try {
-      final response = await _client
-          .from(_userTableName)
-          .select('id')
-          .eq('mobile_no', mobileNo);
-
-      return response.isNotEmpty;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Check if username already exists
-  Future<bool> isUsernameExists(String username) async {
-    try {
-      final response = await _client
-          .from(_userTableName)
-          .select('id')
-          .eq('username', username);
-
-      return response.isNotEmpty;
-    } catch (e) {
-      return false;
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_data');
   }
 }

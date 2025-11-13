@@ -16,6 +16,7 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
+  final authController = Get.find<AuthController>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
@@ -32,7 +33,7 @@ class _SignInScreenState extends State<SignInScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    final authController = Get.find<AuthController>();
+    // authController = Get.find<AuthController>();
 
     final success = await authController.signIn(
       mobileNo: _emailController.text.trim(),
@@ -340,26 +341,44 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Widget _socialButton(String label, IconData icon) {
-    return Container(
-      width: 130,
-      height: 45,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.black),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
+    return InkWell(
+      onTap: () async {
+        bool isSucess = await authController.signInWithGoogle();
+        if (isSucess) {
+          final user = authController.user;
+          if (user == null) {
+            _showErrorSnackBar("User not found after sign-in");
+            return;
+          }
+
+          Get.offAllNamed(AppRoutes.home);
+        } else {
+          _showErrorSnackBar(
+            authController.errorMessage ?? AppConstants.genericErrorMessage,
+          );
+        }
+      },
+      child: Container(
+        width: 130,
+        height: 45,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.black),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

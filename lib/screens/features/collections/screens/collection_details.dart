@@ -5,7 +5,6 @@ import 'package:klektion/utils/color_constants.dart';
 
 import '../../items/controllers/items_controller.dart';
 import '../../items/models/items_model.dart';
-import '../../items/screens/add_items_screen.dart';
 import '../../items/screens/item_details_screen.dart';
 import '../models/collection_model.dart';
 
@@ -178,12 +177,12 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                           fontSize: 16,
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Get.to(() => AddItemScreen());
-                        },
-                        child: const Text("Add Item"),
-                      ),
+                      // ElevatedButton(
+                      //   onPressed: () {
+                      //     Get.to(() => AddItemScreen());
+                      //   },
+                      //   child: const Text("Add Item"),
+                      // ),
                     ],
                   ),
 

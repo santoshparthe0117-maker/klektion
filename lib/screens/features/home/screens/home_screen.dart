@@ -222,7 +222,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           else if (collectionController
                               .recentCollections
                               .isEmpty)
-                            const Center(child: Text("No collections found"))
+                            Center(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    height: 150,
+                                    width: 1050,
+                                    'assets/images/no_data_found.png',
+                                  ),
+                                  Text(
+                                    "No collections found",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
                           else
                             Column(
                               children: collectionController.recentCollections
@@ -237,7 +255,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (itemController.isRecentLoading.value)
                             const Center(child: CircularProgressIndicator())
                           else if (itemController.recentItemList.isEmpty)
-                            const Center(child: Text("No recent items found"))
+                            Center(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/no_data_found.png',
+                                    height: 150,
+                                    width: 1050,
+                                  ),
+                                  Text(
+                                    "No recent items found",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
                           else
                             Column(
                               children: itemController.recentItemList
@@ -251,7 +287,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (wishlistController.isLoadingRecent.value)
                             const Center(child: CircularProgressIndicator())
                           else if (wishlistController.recentWishliItems.isEmpty)
-                            const Center(child: Text("No wish list found"))
+                            Center(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/no_data_found.png',
+                                    height: 150,
+                                    width: 1050,
+                                  ),
+                                  Text(
+                                    "No wish list found",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
                           else
                             Column(
                               children: wishlistController.recentWishliItems

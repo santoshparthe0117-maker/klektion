@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:klektion/utils/color_constants.dart';
 
+import '../controllers/comments_controller.dart';
 import '../controllers/items_controller.dart';
 import '../models/items_model.dart';
+import 'comments_screen.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
   final String itemId;
@@ -152,7 +154,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                       item.isWishlisted
                           ? Icons.favorite
                           : Icons.favorite_border,
-                      color: item.isWishlisted ? Colors.red : Colors.white,
+                      color: item.isWishlisted ? Colors.green : Colors.white,
                     ),
                     onPressed: () => itemController.toggleWishlist(item.itemId),
                   );
@@ -237,9 +239,15 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                 );
               }),
               const SizedBox(width: 16),
-              Icon(Icons.comment, color: Colors.white60, size: 20),
+              IconButton(
+                icon: Icon(Icons.comment),
+                onPressed: () => openComments(item.itemId),
+              ),
               const SizedBox(width: 4),
-              Text("0", style: TextStyle(color: Colors.white70)),
+              Text(
+                item.commentCount.toString(),
+                style: TextStyle(color: Colors.white70),
+              ),
             ],
           ),
         ],
@@ -360,6 +368,17 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
           );
         },
       ),
+    );
+  }
+
+  void openComments(String itemId) {
+    final controller = Get.put(CommentController());
+    controller.fetchComments(itemId);
+
+    Get.bottomSheet(
+      CommentBottomSheet(itemId: itemId),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
     );
   }
 }

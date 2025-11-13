@@ -59,6 +59,7 @@ dependencies:
   mime: ^1.0.4
   geolocator: ^14.0.2
   qr_flutter: ^4.1.0
+  timezone: ^0.10.1
 
 dev_dependencies:
   flutter_test:

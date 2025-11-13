@@ -143,21 +143,22 @@ class ProfileScreen extends StatelessWidget {
                   SizedBox(height: isTablet ? 28 : 20),
                   _sectionTitle("Privacy Controls", isTablet),
                   _toggleTile("Public Profile", isTablet),
-                  _toggleTile("Show Item Values", isTablet),
-                  _toggleTile("Allow Comments", isTablet),
 
+                  //  _toggleTile("Show Item Values", isTablet),
+                  //  _toggleTile("Allow Comments", isTablet),
                   SizedBox(height: isTablet ? 28 : 20),
                   _sectionTitle("Social Activity", isTablet),
                   _statLine(Icons.favorite, "Total Likes", "2,345", isTablet),
                   _statLine(Icons.comment, "Comments", "567", isTablet),
-                  _statLine(Icons.share, "Shares", "123", isTablet),
 
+                  //  _statLine(Icons.share, "Shares", "123", isTablet),
                   SizedBox(height: isTablet ? 28 : 20),
                   _sectionTitle("Backup & Export", isTablet),
+                  SizedBox(height: isTablet ? 28 : 20),
                   _button("Export to CSV", isTablet),
                   _button("Export to PDF", isTablet),
-                  _button("Cloud Backup", isTablet),
 
+                  //  _button("Cloud Backup", isTablet),
                   GestureDetector(
                     onTap: () => _showLogoutConfirm(),
                     child: Container(

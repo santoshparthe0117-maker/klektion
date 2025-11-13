@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/items_model.dart';
@@ -84,19 +85,22 @@ class ItemController extends GetxController {
     try {
       isLoadingItemDetails.value = true;
 
-      final userId = supabase.auth.currentUser?.id;
-
       final response = await supabase
           .from('items')
           .select('''
-          *,
-          item_images(image_url),
-          likes(count),
-          liked_by:likes(user_id),
-          wishlist(count),
-          wishlisted_by:wishlist(user_id)
-        ''')
+      *,
+      item_images(image_url),
+
+      likes(count),
+      liked_by:likes(user_id),
+
+      wishlist(count),
+      wishlisted_by:wishlist(user_id),
+
+      comments:comments!inner(count)
+    ''')
           .eq('item_id', itemId)
+          .eq('comments.is_deleted', false) // ✅ Count only non-deleted comments
           .maybeSingle();
 
       if (response != null) {
@@ -178,6 +182,14 @@ class ItemController extends GetxController {
             item.isWishlisted = false;
           }
         });
+        Get.snackbar(
+          "Removed",
+          "Item removed from wishlist",
+          colorText: Colors.white,
+          backgroundColor: Colors.redAccent.withOpacity(0.8),
+          snackPosition: SnackPosition.BOTTOM,
+          duration: Duration(seconds: 2),
+        );
       } else {
         // ✅ Add to wishlist
         await supabase.from('wishlist').insert({
@@ -190,6 +202,14 @@ class ItemController extends GetxController {
             item.isWishlisted = true;
           }
         });
+        Get.snackbar(
+          "Added",
+          "Item added to wishlist",
+          colorText: Colors.white,
+          backgroundColor: Colors.green.withOpacity(0.8),
+          snackPosition: SnackPosition.BOTTOM,
+          duration: Duration(seconds: 2),
+        );
       }
     } catch (e) {
       print("Toggle wishlist error: $e");
