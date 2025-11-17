@@ -32,7 +32,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0E1A1A),
       body: Obx(() {
-        if (itemController.isLoading.value) {
+        if (itemController.isLoadingItemDetails.value) {
           return const Center(child: CircularProgressIndicator());
         }
 

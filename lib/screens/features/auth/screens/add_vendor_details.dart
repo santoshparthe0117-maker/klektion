@@ -5,7 +5,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../../../controllers/auth_controller.dart';
 import '../../../../routes/app_routes.dart';
 import '../../../../utils/color_constants.dart';

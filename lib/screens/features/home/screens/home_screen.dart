@@ -525,6 +525,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           title: Text(
             collection.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: AppColors.textPrimary),
           ),
           subtitle: Text(

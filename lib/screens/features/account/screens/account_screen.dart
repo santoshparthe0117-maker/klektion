@@ -4,6 +4,7 @@ import 'package:klektion/screens/features/auth/screens/signin_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../../../../controllers/auth_controller.dart';
+import '../controllers/export_controller.dart';
 import '../controllers/profile_stats_controller.dart';
 import 'categories_scrern.dart';
 
@@ -18,6 +19,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final authController = Get.find<AuthController>();
 
   final ProfileStatsController stats = Get.find<ProfileStatsController>();
+  final exportController = Get.put(ExportController());
+
   @override
   void initState() {
     // TODO: implement initState
@@ -205,8 +208,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: isTablet ? 28 : 20),
                   _sectionTitle("Backup & Export", isTablet),
                   SizedBox(height: isTablet ? 28 : 20),
-                  _button("Export to CSV", isTablet),
-                  _button("Export to PDF", isTablet),
+                  InkWell(
+                    onTap: () async {
+                      final path = await exportController.exportCSV();
+                      Get.snackbar("Success", "CSV saved to $path");
+                    },
+                    child: _button("Export to CSV", isTablet),
+                  ),
+                  InkWell(
+                    onTap: () async {
+                      final path = await exportController.exportPDF();
+                      Get.snackbar("Success", "PDF saved to $path");
+                    },
+                    child: _button("Export to PDF", isTablet),
+                  ),
 
                   //  _button("Cloud Backup", isTablet),
                   GestureDetector(

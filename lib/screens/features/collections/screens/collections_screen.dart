@@ -154,6 +154,8 @@ class CollectionsScreen extends StatelessWidget {
               children: [
                 Text(
                   collection.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white,
@@ -175,7 +177,7 @@ class CollectionsScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        "Privacy: ${collection.privacy}",
+                        "${collection.itemCount.toString()} Items",
                         style: const TextStyle(
                           color: Colors.amber,
                           fontSize: 13,

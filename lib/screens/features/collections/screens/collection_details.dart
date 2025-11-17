@@ -21,10 +21,24 @@ class CollectionDetailsScreen extends StatefulWidget {
 class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
   final ItemController itemController = Get.find<ItemController>();
 
+  double totalValue = 0.0;
+  double totalPurchase = 0.0;
+  double growth = 0.0;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getItems();
+  }
+
+  void getItems() async {
+    await itemController.getItemsByCollection(widget.collection.collectionId);
+    _calculateCollectionStats();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Fetch collection items
-    itemController.getItemsByCollection(widget.collection.collectionId);
 
     return Scaffold(
       backgroundColor: AppColors.themeColor,
@@ -157,9 +171,13 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                   /// ✅ Stats Cards
                   Row(
                     children: [
-                      _smallCard("Total Value", "\$15,000"),
+                      _smallCard("Total Value", totalValue.toString()),
                       const SizedBox(width: 12),
-                      _smallCard("Growth", "+12.5%", green: true),
+                      _smallCard(
+                        "Growth",
+                        "${growth.toStringAsFixed(2)}%",
+                        green: true,
+                      ),
                     ],
                   ),
 
@@ -218,6 +236,28 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
         ),
       ),
     );
+  }
+
+  Map<String, dynamic> _calculateCollectionStats() {
+    totalValue = 0.0;
+    totalPurchase = 0.0;
+    setState(() {
+      for (var item in itemController.itemListByCollection) {
+        final double estimated = item.estimatedValue ?? 0;
+        final double purchased = item.purchasePrice ?? 0;
+
+        totalValue += estimated;
+        totalPurchase += purchased > 0 ? purchased : 0;
+      }
+
+      // Calculate growth %
+
+      if (totalPurchase > 0) {
+        growth = ((totalValue - totalPurchase) / totalPurchase) * 100;
+      }
+    });
+
+    return {"totalValue": totalValue, "growth": growth};
   }
 
   Widget _emptyImage() {
@@ -342,7 +382,7 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
 
                   /// Price
                   Text(
-                    "\$${item.purchasePrice ?? 0}",
+                    "\$${item.estimatedValue ?? 0}",
                     style: TextStyle(
                       color: Colors.amber,
                       fontSize: isTablet ? 18 : 14,

@@ -232,16 +232,26 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
                       .toList(),
                 ),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveCollection,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                child: const Text(
-                  "Create Collection",
-                  style: TextStyle(color: Colors.black),
+              const SizedBox(height: 30),
+              InkWell(
+                onTap: _saveCollection,
+
+                child: Container(
+                  alignment: Alignment.center,
+                  width: double.infinity,
+                  padding: EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: goldGradient,
+                  ),
+
+                  child: const Text(
+                    "Create Collection",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],

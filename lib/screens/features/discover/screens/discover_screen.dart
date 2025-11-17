@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../utils/color_constants.dart';
 import '../../collections/models/collection_model.dart';
 import '../../collections/screens/collection_details.dart';
+import 'item_by_category.dart';
 import '../controllers/discover_controller.dart';
 import '../controllers/follows_controller.dart';
 
@@ -349,35 +350,45 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         border: Border.all(color: Colors.white12),
       ),
       padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.category, color: Colors.amber, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            category["name"] ?? "",
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: () {
+          Get.to(
+            CategoryItemsScreen(
+              categoryId: category["category_id"],
+              categoryName: category["name"],
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            category["description"] ?? "",
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
-          ),
-          const Spacer(),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.category, color: Colors.amber, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              category["name"] ?? "",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              category["description"] ?? "",
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+            const Spacer(),
 
-          Text(
-            "Items: ${category["item_count"] ?? 0}",
-            style: const TextStyle(color: Colors.amber, fontSize: 12),
-          ),
-        ],
+            Text(
+              "Items: ${category["item_count"] ?? 0}",
+              style: const TextStyle(color: Colors.amber, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }

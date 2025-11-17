@@ -13,6 +13,9 @@ class ItemController extends GetxController {
   RxList<ItemModel> filteredItems = <ItemModel>[].obs;
   final Rxn<ItemModel> selectedItem = Rxn<ItemModel>();
 
+  RxBool isLoadingByCategory = false.obs;
+  RxList<ItemModel> itemsByCategory = <ItemModel>[].obs;
+
   var isLoading = false.obs;
   var isLoadingByCollection = false.obs;
 
@@ -55,6 +58,34 @@ class ItemController extends GetxController {
       categories.clear();
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> getItemsByCategory(String categoryId) async {
+    try {
+      isLoadingByCategory.value = true;
+
+      final response = await supabase
+          .from('items')
+          .select('''
+            *,
+            item_images(image_url),
+            likes(count),
+            liked_by:likes(user_id),
+            wishlist(count),
+            wishlisted_by:wishlist(user_id)
+          ''')
+          .eq('category_id', categoryId)
+          .eq('is_deleted', false)
+          .order('created_at', ascending: false);
+
+      final data = response as List;
+
+      itemsByCategory.value = data.map((e) => ItemModel.fromJson(e)).toList();
+    } catch (e) {
+      print("getItemsByCategory error: $e");
+    } finally {
+      isLoadingByCategory.value = false;
     }
   }
 
