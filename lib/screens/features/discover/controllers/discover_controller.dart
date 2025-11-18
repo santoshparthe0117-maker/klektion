@@ -48,9 +48,15 @@ class DiscoverController extends GetxController {
     try {
       isLoading.value = true;
 
-      final response = await supabase.from("users").select("*").limit(10);
+      final currentUserId = supabase.auth.currentUser?.id;
 
-      // Assign safely
+      final response = await supabase
+          .from("users")
+          .select("*")
+          .eq("visibility", "public") // ✅ Only public users
+          .neq("user_id", currentUserId!) // ✅ Remove current login user
+          .limit(10);
+
       topUsers.value = response;
     } catch (e) {
       print("fetchTopUsers error: $e");
@@ -66,18 +72,20 @@ class DiscoverController extends GetxController {
       isLoading.value = true;
 
       final response = await supabase.from("categories").select("""
-          category_id,
-          name,
-          description,
-          items:items(category_id)
-        """);
+      category_id,
+      name,
+      description,
+      items:items(
+        item_id,
+        is_deleted
+      )
+    """);
 
       categories.value = (response as List).map((cat) {
-        int itemCount = 0;
+        final items = (cat["items"] as List?) ?? [];
 
-        if (cat["items"] != null && cat["items"] is List) {
-          itemCount = (cat["items"] as List).length;
-        }
+        // Count only items where is_deleted = false
+        int itemCount = items.where((i) => i["is_deleted"] == false).length;
 
         return {
           "category_id": cat["category_id"],

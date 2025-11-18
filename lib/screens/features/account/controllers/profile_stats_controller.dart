@@ -15,10 +15,55 @@ class ProfileStatsController extends GetxController {
 
   RxBool isLoading = false.obs;
 
+  RxString visibility = "private".obs;
+  RxBool isUpdatingVisibility = false.obs;
+
   @override
   void onInit() {
     super.onInit();
     fetchProfileStats();
+  }
+
+  Future<void> fetchVisibility() async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final res = await supabase
+          .from('users')
+          .select('visibility')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      visibility.value = res?['visibility'] ?? "private";
+    } catch (e) {
+      print("fetchVisibility error: $e");
+    }
+  }
+
+  // ---------------------------------------------------
+  // 🔥 UPDATE VISIBILITY TO DATABASE
+  // ---------------------------------------------------
+  Future<void> updateVisibility(bool isPublic) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      isUpdatingVisibility.value = true;
+
+      final newVisibility = isPublic ? "public" : "private";
+
+      await supabase
+          .from('users')
+          .update({'visibility': newVisibility})
+          .eq('user_id', userId);
+
+      visibility.value = newVisibility; // 🔥 Update UI instantly
+    } catch (e) {
+      print("updateVisibility error: $e");
+    } finally {
+      isUpdatingVisibility.value = false;
+    }
   }
 
   /// ----------------------------------------------------------------------

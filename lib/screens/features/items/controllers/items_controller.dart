@@ -275,6 +275,20 @@ class ItemController extends GetxController {
     }
   }
 
+  void filterItems(String query) {
+    if (query.isEmpty) {
+      filteredItems.value = [...itemList];
+      return;
+    }
+
+    final lowerQuery = query.toLowerCase();
+
+    filteredItems.value = itemList.where((item) {
+      return item.name.toLowerCase().contains(lowerQuery) ||
+          (item.description?.toLowerCase().contains(lowerQuery) ?? false);
+    }).toList();
+  }
+
   Future<void> getRecentItems() async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
 
@@ -304,9 +318,32 @@ class ItemController extends GetxController {
     }
   }
 
-  void deleteItems(String id) {
-    itemList.removeWhere((p) => p.itemId == id);
-    filteredItems.removeWhere((p) => p.itemId == id);
+  Future<bool> deleteItem(String itemId) async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return false;
+
+      // 🔥 Soft delete item
+      await supabase
+          .from('items')
+          .update({'is_deleted': true})
+          .eq('item_id', itemId)
+          .eq('user_id', userId);
+
+      // 🔥 Remove from main list
+      itemList.removeWhere((i) => i.itemId == itemId);
+
+      // 🔥 Remove from filtered list (search results)
+      filteredItems.removeWhere((i) => i.itemId == itemId);
+
+      // 🔥 Remove from recent list
+      // recentItemList.removeWhere((i) => i.itemId == itemId);
+
+      return true;
+    } catch (e) {
+      print("❌ deleteItem error: $e");
+      return false;
+    }
   }
 
   /// Save image record to database
@@ -328,6 +365,7 @@ class ItemController extends GetxController {
     required String? categoryId,
     required double? purchasePrice,
     required double? estimatedValue,
+    required String shortDesciption,
     required String description,
     required String visibility, // private / public
     DateTime? acquisitionDate,
@@ -349,6 +387,7 @@ class ItemController extends GetxController {
         'collection_id': collectionId,
         'category_id': categoryId,
         'name': name,
+        'short_description': shortDesciption,
         'description': description,
         'purchase_price': purchasePrice,
         'estimated_value': estimatedValue,

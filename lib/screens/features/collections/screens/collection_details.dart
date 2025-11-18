@@ -6,6 +6,7 @@ import 'package:klektion/utils/color_constants.dart';
 import '../../items/controllers/items_controller.dart';
 import '../../items/models/items_model.dart';
 import '../../items/screens/item_details_screen.dart';
+import '../controllers/collections_controller.dart';
 import '../models/collection_model.dart';
 
 class CollectionDetailsScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class CollectionDetailsScreen extends StatefulWidget {
 
 class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
   final ItemController itemController = Get.find<ItemController>();
+  final controller = Get.find<CollectionController>();
 
   double totalValue = 0.0;
   double totalPurchase = 0.0;
@@ -101,15 +103,32 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                 Positioned(
                   top: 40,
                   right: 16,
-                  child: InkWell(
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black45,
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      child: const Icon(Icons.more_vert, color: Colors.white),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black.withOpacity(0.5),
+                    child: PopupMenuButton<String>(
+                      color: Colors.white,
+                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: "edit",
+                          child: Text("Edit Item"),
+                        ),
+
+                        PopupMenuItem(
+                          value: "delete",
+                          onTap: () async {
+                            await Future.delayed(
+                              Duration(milliseconds: 200),
+                            ); // fix auto-trigger bug
+                            _showDeleteDialog();
+                          },
+                          child: Text(
+                            "Delete Item",
+                            style: TextStyle(color: Colors.red.shade300),
+                          ),
+                        ),
+                      ],
+                      onSelected: (value) {},
                     ),
                   ),
                 ),
@@ -235,6 +254,72 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.black87,
+          title: const Text(
+            "Delete Collection?",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            "Are you sure you want to delete this collection? This action cannot be undone.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Close the dialog first
+                Get.back();
+
+                final controller = Get.find<CollectionController>();
+
+                final ok = await controller.deleteCollection(
+                  widget.collection.collectionId,
+                );
+
+                if (ok) {
+                  Get.snackbar(
+                    "Deleted",
+                    "Collection removed successfully",
+                    backgroundColor: Colors.redAccent,
+                    colorText: Colors.white,
+                  );
+
+                  /// 🔥 Important!
+                  /// Close the current CollectionDetailsScreen and return to previous list screen.
+                  Future.delayed(Duration(milliseconds: 120), () {
+                    Get.back(); // ⬅ go back to list screen
+                  });
+                } else {
+                  Get.snackbar(
+                    "Error",
+                    "Failed to delete collection",
+                    backgroundColor: Colors.redAccent,
+                    colorText: Colors.white,
+                  );
+                }
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

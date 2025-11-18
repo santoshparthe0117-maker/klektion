@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:klektion/loadings/shimer_loading.dart';
+import 'package:klektion/loadings/shimmer_loading_designs.dart';
 import 'package:klektion/screens/features/collections/screens/create_collections.dart';
 import 'package:klektion/screens/features/items/controllers/items_controller.dart';
 import 'package:klektion/screens/features/items/screens/items_screen.dart';
 import 'package:klektion/screens/features/wish_list/screens/wish_list_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../controllers/auth_controller.dart';
 import '../../collections/controllers/collections_controller.dart';
@@ -157,8 +160,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           // Dashboard cards (responsive grid)
                           Obx(() {
                             if (dashboardController.isDashboardLoading.value) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
+                              return ShimmerLoading(
+                                data: Row(
+                                  children: [
+                                    _buildDashboardLoading(),
+                                    _buildDashboardLoading(),
+                                    _buildDashboardLoading(),
+                                  ],
+                                ),
                               );
                             }
 
@@ -218,7 +227,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           //  Collections list
                           if (collectionController.isLoadingRecent.value)
-                            const Center(child: CircularProgressIndicator())
+                            Center(
+                              child: ShimmerLoading(
+                                data: Column(
+                                  children: [
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
                           else if (collectionController
                               .recentCollections
                               .isEmpty)
@@ -253,7 +281,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           _sectionHeader("Recent Items", ItemsScreen()),
                           const SizedBox(height: 8),
                           if (itemController.isRecentLoading.value)
-                            const Center(child: CircularProgressIndicator())
+                            Center(
+                              child: ShimmerLoading(
+                                data: Column(
+                                  children: [
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
                           else if (itemController.recentItemList.isEmpty)
                             Center(
                               child: Column(
@@ -285,7 +332,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           _sectionHeader("Wish list", WishlistScreen()),
                           const SizedBox(height: 8),
                           if (wishlistController.isLoadingRecent.value)
-                            const Center(child: CircularProgressIndicator())
+                            Center(
+                              child: ShimmerLoading(
+                                data: Column(
+                                  children: [
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                    ShimmerDesign().horizontalcontainer(
+                                      50,
+                                      double.infinity,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
                           else if (wishlistController.recentWishliItems.isEmpty)
                             Center(
                               child: Column(
@@ -370,6 +436,25 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  _buildDashboardLoading() {
+    return Expanded(
+      child: Container(
+        height: 100,
+
+        padding: const EdgeInsets.all(12),
+        margin: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [],
+        ),
       ),
     );
   }

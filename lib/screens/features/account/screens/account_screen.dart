@@ -26,6 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // TODO: implement initState
     super.initState();
     stats.fetchProfileStats();
+    stats.fetchVisibility();
   }
 
   @override
@@ -180,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: isTablet ? 28 : 20),
                   _sectionTitle("Privacy Controls", isTablet),
-                  _toggleTile("Public Profile", isTablet),
+                  _toggleTile("Public Profile", stats, isTablet),
 
                   //  _toggleTile("Show Item Values", isTablet),
                   //  _toggleTile("Allow Comments", isTablet),
@@ -359,16 +360,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _toggleTile(String label, bool isTablet) {
-    return SwitchListTile(
-      value: true,
-      onChanged: (value) {},
-      activeThumbColor: Colors.amber,
-      title: Text(
-        label,
-        style: TextStyle(color: Colors.white, fontSize: isTablet ? 18 : 15),
-      ),
-    );
+  Widget _toggleTile(
+    String label,
+    ProfileStatsController controller,
+    bool isTablet,
+  ) {
+    return Obx(() {
+      final isPublic = controller.visibility.value == "public";
+
+      return SwitchListTile(
+        value: isPublic,
+        activeThumbColor: Colors.amber,
+        inactiveThumbColor: Colors.white,
+        inactiveTrackColor: Colors.white24,
+
+        title: Text(
+          label,
+          style: TextStyle(color: Colors.white, fontSize: isTablet ? 18 : 15),
+        ),
+
+        // Disable while saving
+        onChanged: controller.isUpdatingVisibility.value
+            ? null
+            : (value) {
+                controller.updateVisibility(value); // 🔥 Toggle handler
+              },
+      );
+    });
   }
 
   Widget _statLine(IconData icon, String name, String value, bool tab) {

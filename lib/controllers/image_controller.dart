@@ -25,7 +25,7 @@ class ImageController {
     }
   }
 
-  Future pickMultipleImages({int limit = 4}) async {
+  Future pickMultipleImages({int limit = 5}) async {
     try {
       final List<XFile> images = await picker.pickMultiImage(
         maxWidth: 1920,

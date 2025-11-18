@@ -32,6 +32,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final nameCtrl = TextEditingController();
+  final shortDescCtrl = TextEditingController();
   final descCtrl = TextEditingController();
   final priceCtrl = TextEditingController();
   final valueCtrl = TextEditingController();
@@ -110,6 +111,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
+                    /// Add Image Button
                     GestureDetector(
                       onTap: () async {
                         images = await _imageController.pickMultipleImages();
@@ -128,22 +130,57 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         ),
                       ),
                     ),
+
                     const SizedBox(width: 8),
 
-                    ...images.map(
-                      (file) => Padding(
+                    /// Selected Images + Remove Button
+                    ...images.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      final file = entry.value;
+
+                      return Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.file(
-                            File(file.path),
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                          ),
+                        child: Stack(
+                          children: [
+                            /// The Image
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.file(
+                                File(file.path),
+                                width: 70,
+                                height: 70,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+
+                            /// Remove Button (Top-right)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    images.removeAt(index);
+                                  });
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.6),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -188,6 +225,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 privacyList,
                 (v) => selectedPrivacy = v['name'],
                 privacyList.firstWhere((p) => p['name'] == selectedPrivacy),
+              ),
+              const SizedBox(height: 12),
+              _shortDescriptionField(
+                "Short Description (optional)",
+                shortDescCtrl,
               ),
               const SizedBox(height: 12),
               _textArea("Description", descCtrl),
@@ -237,6 +279,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                             // 'add6f410-21c9-4980-8a52-9873bc9c36b6',
                             purchasePrice: double.tryParse(priceCtrl.text),
                             estimatedValue: double.tryParse(valueCtrl.text),
+                            shortDesciption: shortDescCtrl.text.trim(),
                             description: descCtrl.text.trim(),
                             visibility: selectedPrivacy.toLowerCase(),
                             imageUrls: imageUrls,
@@ -358,6 +401,27 @@ class _AddItemScreenState extends State<AddItemScreen> {
             prefix: const Text("\$ ", style: TextStyle(color: Colors.white)),
           ),
         ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _shortDescriptionField(String label, TextEditingController c) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white)),
+        const SizedBox(height: 6),
+
+        TextFormField(
+          controller: c,
+          maxLines: 3,
+          minLines: 1,
+          style: const TextStyle(color: Colors.white),
+          decoration: _fieldDecoration(),
+          // 🔥 No validation here (optional field)
+        ),
+
         const SizedBox(height: 12),
       ],
     );

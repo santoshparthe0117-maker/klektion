@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:open_filex/open_filex.dart';
@@ -10,20 +11,31 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class ExportController extends GetxController {
   final supabase = Supabase.instance.client;
 
-  /// 🔍 Fetch all collections + items for this user
-  Future<List<Map<String, dynamic>>> fetchCollectionsWithItems() async {
+  /// -------------------------------------------------------------------------
+  /// 🔍 Fetch ALL ITEMS with collection + category + item details
+  /// -------------------------------------------------------------------------
+  Future<List<Map<String, dynamic>>> fetchItemsData() async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
-    final collections = await supabase
-        .from("collections")
-        .select("*, items(*)")
-        .eq("user_id", userId);
+    final response = await supabase
+        .from("items")
+        .select("""
+          *,
+          categories:category_id(name),
+          collections:collection_id(name, description),
+          item_images(image_url)
+        """)
+        .eq("user_id", userId)
+        .eq("is_deleted", false)
+        .order("created_at", ascending: false);
 
-    return List<Map<String, dynamic>>.from(collections);
+    return List<Map<String, dynamic>>.from(response);
   }
 
-  /// 📁 Get device path for saving files
+  /// -------------------------------------------------------------------------
+  /// 📁 Get save location for PDF/CSV
+  /// -------------------------------------------------------------------------
   Future<String> _getSavePath(String filename) async {
     Directory dir;
 
@@ -34,96 +46,116 @@ class ExportController extends GetxController {
       dir = await getApplicationDocumentsDirectory();
     }
 
-    final path = "${dir.path}/$filename";
-    return path;
+    return "${dir.path}/$filename";
   }
 
-  /// 🔽 Save CSV file
+  /// -------------------------------------------------------------------------
+  /// 📄 Export CSV of FULL item details
+  /// -------------------------------------------------------------------------
   Future<String> exportCSV() async {
-    final data = await fetchCollectionsWithItems();
+    final List items = await fetchItemsData();
 
     List<List<dynamic>> rows = [
       [
-        "Collection Name",
-        "Description",
         "Item Name",
+        "Category",
+        "Collection",
+        "Collection Description",
+        "Description",
+        "Condition",
         "Purchase Price",
-        "Value",
+        "Estimated Value",
+        "Acquisition Date",
+        "Visibility",
       ],
     ];
 
-    for (var col in data) {
-      final items = col["items"] as List<dynamic>;
-
-      for (var item in items) {
-        rows.add([
-          col["name"],
-          col["description"] ?? "",
-          item["name"],
-          item["purchase_price"] ?? "",
-          item["estimated_value"] ?? "",
-        ]);
-      }
+    for (var item in items) {
+      rows.add([
+        item["name"],
+        item["categories"]?["name"] ?? "No Category",
+        item["collections"]?["name"] ?? "No Collection",
+        item["collections"]?["description"] ?? "",
+        item["description"] ?? "",
+        item["condition"] ?? "",
+        item["purchase_price"] ?? "",
+        item["estimated_value"] ?? "",
+        item["acquisition_date"] ?? "",
+        item["visibility"] ?? "",
+      ]);
     }
 
-    String csvData = const ListToCsvConverter().convert(rows);
+    final csvData = const ListToCsvConverter().convert(rows);
+    final path = await _getSavePath("items_export.csv");
 
-    final path = await _getSavePath("collections_export.csv");
     final file = File(path);
     await file.writeAsString(csvData);
 
     OpenFilex.open(path);
-
     return path;
   }
 
-  /// 📄 Export PDF file
+  /// -------------------------------------------------------------------------
+  /// 📘 Export PDF of FULL item details
+  /// -------------------------------------------------------------------------
   Future<String> exportPDF() async {
-    final data = await fetchCollectionsWithItems();
+    final List items = await fetchItemsData();
 
     final pdf = pw.Document();
 
     pdf.addPage(
       pw.MultiPage(
-        build: (context) => [
-          pw.Header(level: 1, text: "Collection Export"),
-          ...data.map(
-            (col) => pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  col["name"] ?? "",
-                  style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-                pw.Text(col["description"] ?? ""),
-                pw.SizedBox(height: 10),
-                pw.Table.fromTextArray(
-                  headers: ["Item Name", "Purchase Price", "Value"],
-                  data: (col["items"] as List<dynamic>)
-                      .map(
-                        (item) => [
-                          item["name"],
-                          item["purchase_price"].toString(),
-                          item["estimated_value"].toString(),
-                        ],
-                      )
-                      .toList(),
-                ),
-                pw.Divider(),
-              ],
+        build: (ctx) => [
+          // 🔥 Centered App Name
+          pw.Center(
+            child: pw.Text(
+              "Klektion",
+              style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
             ),
+          ),
+
+          pw.SizedBox(height: 10),
+
+          // 🔥 Section Title
+          pw.Center(
+            child: pw.Text(
+              "Items Export Report",
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+
+          pw.SizedBox(height: 20),
+
+          // 🔥 Table
+          pw.TableHelper.fromTextArray(
+            headers: ["Item", "Category", "Collection", "Purchase", "Value"],
+            data: items.map((item) {
+              return [
+                item["name"] ?? "",
+                item["categories"]?["name"] ?? "No Category",
+                item["collections"]?["name"] ?? "No Collection",
+                "${item["purchase_price"] ?? ""}",
+                "${item["estimated_value"] ?? ""}",
+              ];
+            }).toList(),
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              fontSize: 12,
+            ),
+            cellStyle: pw.TextStyle(fontSize: 11),
+            headerDecoration: const pw.BoxDecoration(
+              color: PdfColor.fromInt(0xFFE0E0E0),
+            ),
+            cellAlignment: pw.Alignment.centerLeft,
+            border: pw.TableBorder.all(),
           ),
         ],
       ),
     );
 
-    final path = await _getSavePath("collections_export.pdf");
+    final path = await _getSavePath("items_export.pdf");
     final file = File(path);
     await file.writeAsBytes(await pdf.save());
-
     OpenFilex.open(path);
 
     return path;

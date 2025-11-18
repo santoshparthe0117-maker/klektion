@@ -16,7 +16,10 @@ class DiscoverScreen extends StatefulWidget {
 }
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
-  final DiscoverController controller = Get.put(DiscoverController());
+  final DiscoverController controller = Get.put(
+    DiscoverController(),
+    permanent: true,
+  );
   final FollowController followController = Get.put(FollowController());
 
   @override
@@ -175,7 +178,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
-  Widget _trendingCard(dynamic data) {
+  Widget _trendingCard(Map<String, dynamic> data) {
     final collection = CollectionModel.fromJson(data);
     return InkWell(
       onTap: () {

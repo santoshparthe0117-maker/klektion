@@ -50,7 +50,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _headerImage(item),
+              _headerImage(item, context),
               const SizedBox(height: 16),
               _itemTitleSection(item),
               const SizedBox(height: 16),
@@ -66,7 +66,71 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
     );
   }
 
-  Widget _headerImage(item) {
+  void _showDeleteItemDialog(String itemId, context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.themeColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text(
+            "Delete Item?",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            "Are you sure you want to delete this item?\nThis action cannot be undone.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white60),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Get.back(); // close dialog immediately
+
+                final ok = await itemController.deleteItem(itemId);
+
+                if (ok) {
+                  Get.snackbar(
+                    "Deleted",
+                    "Item removed successfully",
+                    backgroundColor: Colors.redAccent,
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                } else {
+                  Get.snackbar(
+                    "Error",
+                    "Failed to delete item",
+                    backgroundColor: Colors.redAccent,
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                }
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _headerImage(item, context) {
     return Stack(
       children: [
         SizedBox(
@@ -174,6 +238,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                     const PopupMenuItem(value: "share", child: Text("Share")),
                     PopupMenuItem(
                       value: "delete",
+                      onTap: () {
+                        _showDeleteItemDialog(item.itemId, context);
+                      },
                       child: Text(
                         "Delete Item",
                         style: TextStyle(color: Colors.red.shade300),
