@@ -94,7 +94,11 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                         color: Colors.black45,
                         borderRadius: BorderRadius.circular(50),
                       ),
-                      child: const Icon(Icons.arrow_back, color: Colors.white),
+                      child: Icon(
+                        Icons.arrow_back,
+
+                        color: AppColors.primaryColor,
+                      ),
                     ),
                   ),
                 ),
@@ -107,7 +111,10 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                     backgroundColor: Colors.black.withOpacity(0.5),
                     child: PopupMenuButton<String>(
                       color: Colors.white,
-                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: AppColors.primaryColor,
+                      ),
                       itemBuilder: (context) => [
                         const PopupMenuItem(
                           value: "edit",
@@ -209,7 +216,7 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                       Text(
                         "Items (${widget.collection.itemCount ?? 0})",
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.primaryColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -360,6 +367,7 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF1C2B22),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,6 +401,7 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF1C2B22),
           borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.grey),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.15),

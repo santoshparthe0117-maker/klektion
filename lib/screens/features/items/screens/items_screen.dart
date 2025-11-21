@@ -22,7 +22,7 @@ class _ItemsScreenState extends State<ItemsScreen> {
     return Scaffold(
       backgroundColor: AppColors.themeColor,
       appBar: AppBar(
-        title: const Text('My Items', style: TextStyle(color: Colors.white)),
+        title: const Text('My Items', style: TextStyle(color: Colors.black)),
         centerTitle: true,
         elevation: 0,
 

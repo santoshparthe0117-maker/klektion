@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:klektion/screens/features/account/screens/noticiaction_request.dart';
 import 'package:klektion/screens/features/auth/screens/signin_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
@@ -7,6 +8,8 @@ import '../../../../controllers/auth_controller.dart';
 import '../controllers/export_controller.dart';
 import '../controllers/profile_stats_controller.dart';
 import 'categories_scrern.dart';
+import 'followers_screen.dart';
+import 'following_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -64,13 +67,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: MediaQuery.of(context).padding.top),
-                  Text(
-                    "Profile",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: isTablet ? 24 : 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Profile",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isTablet ? 24 : 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 5),
                   Container(
@@ -137,27 +145,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Obx(
-                        () => _statsCard(
-                          stats.totalItems.value.toString(),
-                          "Items",
-                          statCardSize,
-                          isTablet,
+                        () => InkWell(
+                          onTap: () async {
+                            await Get.to(FollowRequestsPage());
+                            stats.fetchProfileStats();
+                          },
+                          child: _statsCard(
+                            stats.totalFollowRequests.value.toString(),
+                            "Requests",
+                            statCardSize,
+                            isTablet,
+                          ),
                         ),
                       ),
                       Obx(
-                        () => _statsCard(
-                          stats.totalFollowers.value.toString(),
-                          "Followers",
-                          statCardSize,
-                          isTablet,
+                        () => InkWell(
+                          onTap: () async {
+                            await Get.to(FollowersPage());
+                            stats.fetchProfileStats();
+                          },
+                          child: _statsCard(
+                            stats.totalFollowers.value.toString(),
+                            "Followers",
+                            statCardSize,
+                            isTablet,
+                          ),
                         ),
                       ),
                       Obx(
-                        () => _statsCard(
-                          stats.totalFollowing.value.toString(),
-                          "Following",
-                          statCardSize,
-                          isTablet,
+                        () => InkWell(
+                          onTap: () async {
+                            await Get.to(FollowingPage());
+                            stats.fetchProfileStats();
+                          },
+                          child: _statsCard(
+                            stats.totalFollowing.value.toString(),
+                            "Following",
+                            statCardSize,
+                            isTablet,
+                          ),
                         ),
                       ),
                     ],

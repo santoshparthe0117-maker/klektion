@@ -231,10 +231,10 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                   color: Colors.white,
                   icon: const Icon(Icons.more_vert, color: Colors.white),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: "edit",
-                      child: Text("Edit Item"),
-                    ),
+                    // const PopupMenuItem(
+                    //   value: "edit",
+                    //   child: Text("Edit Item"),
+                    // ),
                     const PopupMenuItem(value: "share", child: Text("Share")),
                     PopupMenuItem(
                       value: "delete",

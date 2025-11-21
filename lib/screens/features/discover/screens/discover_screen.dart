@@ -142,15 +142,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   Widget _listView() {
     final results = controller.filteredResults;
-    followController.loadFollowStatus(results);
+    followController.loadFollowState(results);
 
     /// ✅ When Categories tab is selected → GridView
     if (controller.selectedTab.value == 2) {
       return GridView.builder(
         itemCount: results.length,
         padding: EdgeInsets.zero,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
+        // shrinkWrap: true,
+        // physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 12,
@@ -267,9 +267,28 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   Widget _userCard(dynamic user) {
     final userId = user['user_id'];
+    final visibility = user['visibility']; // public / private
+
+    // load follow status when widget builds
+    //followController.loadFollowState(userId);
 
     return Obx(() {
       final isFollowing = followController.isFollowingMap[userId] ?? false;
+      final isRequested = followController.requestSentMap[userId] ?? false;
+
+      String buttonText = "Follow";
+      Color bg = Colors.amber;
+      Color textColor = Colors.black;
+
+      if (isRequested) {
+        buttonText = "Requested";
+        bg = Colors.grey.shade700;
+        textColor = Colors.white;
+      } else if (isFollowing) {
+        buttonText = "Following";
+        bg = Colors.grey.shade800;
+        textColor = Colors.white;
+      }
 
       return Container(
         padding: const EdgeInsets.all(12),
@@ -279,61 +298,43 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         ),
         child: Row(
           children: [
-            // Profile Picture
             CircleAvatar(
               radius: 25,
-              backgroundColor: Colors.grey.shade800,
-              backgroundImage:
-                  user['avatar_url'] != null &&
-                      user['avatar_url'].toString().isNotEmpty
+              backgroundImage: user['avatar_url'] != null
                   ? NetworkImage(user['avatar_url'])
                   : null,
               child: user['avatar_url'] == null
-                  ? const Icon(Icons.person, color: Colors.white70)
+                  ? Icon(Icons.person, color: Colors.white70)
                   : null,
             ),
 
             const SizedBox(width: 12),
 
-            // Name & Stats
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user['name'] ?? "",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-              ],
+            Text(
+              user['name'],
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
 
-            const Spacer(),
+            Spacer(),
 
-            // FOLLOW BUTTON
             GestureDetector(
-              onTap: () =>
-                  followController.toggleFollow(userId), // TOGGLE FOLLOW
+              onTap: () {
+                followController.handleFollowTap(
+                  targetUserId: userId,
+                  visibility: visibility,
+                );
+              },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 6,
-                ),
+                duration: Duration(milliseconds: 250),
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isFollowing ? Colors.grey.shade800 : Colors.amber,
+                  color: bg,
                   borderRadius: BorderRadius.circular(20),
-                  border: isFollowing
-                      ? Border.all(color: Colors.white54)
-                      : null,
                 ),
                 child: Text(
-                  isFollowing ? "Following" : "Follow",
+                  buttonText,
                   style: TextStyle(
-                    color: isFollowing ? Colors.white : Colors.black,
+                    color: textColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

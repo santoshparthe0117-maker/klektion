@@ -56,6 +56,7 @@ class ItemModel {
   final String? categoryId;
   final String name;
   final String? description;
+  final String? shortDescription;
   final double? purchasePrice;
   final double? estimatedValue;
   final DateTime? acquisitionDate;
@@ -80,6 +81,7 @@ class ItemModel {
     this.categoryId,
     required this.name,
     this.description,
+    this.shortDescription,
     this.purchasePrice,
     this.estimatedValue,
     this.acquisitionDate,
@@ -144,7 +146,8 @@ class ItemModel {
       collectionId: json['collection_id'] ?? "",
       categoryId: json['category_id'],
       name: json['name'] ?? "",
-      description: json['description'],
+      description: json['description'] ?? '',
+      shortDescription: json['shortDescription'] ?? '',
       purchasePrice: (json['purchase_price'] is num)
           ? (json['purchase_price'] as num).toDouble()
           : double.tryParse(json['purchase_price']?.toString() ?? ""),

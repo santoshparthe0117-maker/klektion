@@ -45,6 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+		<string>This app needs camera access to take photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+		<string>This app needs photo library access to pick images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Allow the app to save images to your gallery.</string>
+
 
 	<!-- ✅ Supabase OAuth redirect configuration -->
 	<key>CFBundleURLTypes</key>

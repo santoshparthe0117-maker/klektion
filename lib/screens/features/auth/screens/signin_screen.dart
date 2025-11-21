@@ -118,7 +118,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 const SizedBox(height: 8),
 
                 Text(
-                  'Your premium collection vault',
+                  'The collection vault',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Colors.white70,

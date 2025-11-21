@@ -19,7 +19,7 @@ class Validators {
   // Validate email (optional field)
   static String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return null; // Email is optional
+      return AppConstants.invalidEmailMessage;
     }
 
     if (!EmailValidator.validate(value.trim())) {

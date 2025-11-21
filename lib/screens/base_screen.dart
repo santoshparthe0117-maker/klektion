@@ -31,8 +31,8 @@ class _BaseScreenState extends State<BaseScreen> {
   final List<Widget> _screens = [
     HomeScreen(),
     DiscoverScreen(),
-    ItemsScreen(),
 
+    // ItemsScreen(),
     ProfileScreen(),
   ];
 
@@ -67,11 +67,11 @@ class _BaseScreenState extends State<BaseScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt_rounded),
-            label: 'Items',
-          ),
 
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.list_alt_rounded),
+          //   label: 'Items',
+          // ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:klektion/loadings/shimer_loading.dart';
 import 'package:klektion/loadings/shimmer_loading_designs.dart';
-import 'package:klektion/screens/features/collections/screens/create_collections.dart';
 import 'package:klektion/screens/features/items/controllers/items_controller.dart';
 import 'package:klektion/screens/features/items/screens/items_screen.dart';
 import 'package:klektion/screens/features/wish_list/screens/wish_list_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
-import 'package:shimmer/shimmer.dart';
-
 import '../../../../controllers/auth_controller.dart';
 import '../../collections/controllers/collections_controller.dart';
 import '../../collections/models/collection_model.dart';
@@ -117,10 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Text(
                                 "My Collection",
-                                style: TextStyle(
-                                  color: AppColors.accent,
-                                  fontSize: fontSize + 4,
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryColor,
                                 ),
                               ),
                               // const CircleAvatar(
@@ -416,15 +414,18 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Icon(icon, size: 28, color: AppColors.accent),
           const SizedBox(height: 8),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          Tooltip(
+            message: value, // full text here
+            preferBelow: false, // optional
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -548,7 +549,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 4),
 
                   Text(
-                    item.name ?? "",
+                    item.name,
                     style: const TextStyle(fontSize: 14, color: Colors.white70),
                   ),
 
@@ -577,7 +578,8 @@ class _HomeScreenState extends State<HomeScreen> {
     CollectionModel collection, {
     bool isTablet = false,
   }) {
-    final imageSize = isTablet ? 100.0 : 80.0;
+    final imageSize = isTablet ? 120.0 : 100.0;
+    final imageSizeWidth = isTablet ? 90.0 : 70.0;
 
     return InkWell(
       onTap: () {
@@ -591,41 +593,55 @@ class _HomeScreenState extends State<HomeScreen> {
           border: BoxBorder.all(color: const Color.fromARGB(255, 114, 100, 52)),
         ),
         child: ListTile(
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              collection.coverImageUrl ?? '',
-              width: imageSize,
-              height: imageSize,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: imageSize,
-                  height: imageSize,
-                  color: Colors.grey.shade800,
-                  child: const Icon(Icons.broken_image, color: Colors.white54),
-                );
-              },
+          leading: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: BoxBorder.all(
+                color: const Color.fromARGB(255, 114, 100, 52),
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                collection.coverImageUrl ?? '',
+                width: imageSizeWidth,
+                height: imageSize,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: imageSize,
+                    height: imageSize,
+                    color: Colors.grey.shade800,
+                    child: const Icon(
+                      Icons.broken_image,
+                      color: Colors.white54,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           title: Text(
             collection.name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           subtitle: Text(
             "${collection.itemCount} items",
             style: const TextStyle(color: AppColors.textSecondary),
           ),
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text("", style: const TextStyle(color: AppColors.accent)),
-          ),
+          // trailing: Container(
+          //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          //   decoration: BoxDecoration(
+          //     color: AppColors.accent.withOpacity(0.2),
+          //     borderRadius: BorderRadius.circular(8),
+          //   ),
+          //   child: Text("", style: const TextStyle(color: AppColors.accent)),
+          // ),
         ),
       ),
     );

@@ -53,7 +53,7 @@ class DiscoverController extends GetxController {
       final response = await supabase
           .from("users")
           .select("*")
-          .eq("visibility", "public") // ✅ Only public users
+          // ✅ Only public users
           .neq("user_id", currentUserId!) // ✅ Remove current login user
           .limit(10);
 

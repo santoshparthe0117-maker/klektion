@@ -5,7 +5,7 @@ class ProfileStatsController extends GetxController {
   final supabase = Supabase.instance.client;
 
   // Your existing stats
-  RxInt totalItems = 0.obs;
+  RxInt totalFollowRequests = 0.obs;
   RxInt totalFollowers = 0.obs;
   RxInt totalFollowing = 0.obs;
 
@@ -76,15 +76,16 @@ class ProfileStatsController extends GetxController {
     try {
       isLoading.value = true;
 
-      // =========== 1️⃣ TOTAL ITEMS ================
-      final itemsRes = await supabase
-          .from('items')
-          .select('item_id')
-          .eq('user_id', userId)
-          .eq('is_deleted', false);
+      // =========== 1️⃣ TOTAL FOLLOW REQUESTS ================
+      final requestRes = await supabase
+          .from('follow_requests')
+          .select('id')
+          .eq('receiver_id', userId)
+          .eq('status', 'pending');
 
-      totalItems.value = itemsRes.length;
+      totalFollowRequests.value = requestRes.length;
 
+      // =========== 2️⃣ TOTAL FOLLOWERS ================
       final followersRes = await supabase
           .from('follows')
           .select('follower_id')
@@ -92,8 +93,7 @@ class ProfileStatsController extends GetxController {
 
       totalFollowers.value = followersRes.length;
 
-      // =========== 5️⃣ TOTAL FOLLOWING ===========
-
+      // =========== 3️⃣ TOTAL FOLLOWING =================
       final followingRes = await supabase
           .from('follows')
           .select('following_id')
@@ -101,38 +101,44 @@ class ProfileStatsController extends GetxController {
 
       totalFollowing.value = followingRes.length;
 
-      // Extract itemIds for next queries
+      // =========== 4️⃣ TOTAL ITEMS → REPLACED (You don't want it anymore) ============
+
+      // =========== 5️⃣ TOTAL LIKES & COMMENTS ===========
+
+      final itemsRes = await supabase
+          .from('items')
+          .select('item_id')
+          .eq('user_id', userId)
+          .eq('is_deleted', false);
+
       final List<String> myItemIds = itemsRes
           .map<String>((e) => e['item_id'] as String)
           .toList();
 
-      // If user has no items → set 0 stats
       if (myItemIds.isEmpty) {
         totalLikes.value = 0;
         totalComments.value = 0;
-      } else {
-        // Convert list → SQL IN format ('a','b','c')
-        final String idList = "(${myItemIds.join(',')})";
-
-        // TOTAL LIKES
-        final likesRes = await supabase
-            .from('likes')
-            .select('item_id')
-            .filter('item_id', 'in', idList);
-
-        totalLikes.value = likesRes.length;
-
-        // TOTAL COMMENTS
-        final commentsRes = await supabase
-            .from('comments')
-            .select('item_id')
-            .eq('is_deleted', false)
-            .filter('item_id', 'in', idList);
-
-        totalComments.value = commentsRes.length;
+        return;
       }
 
-      // =========== 4️⃣ TOTAL FOLLOWERS ===========
+      final String idList = "(${myItemIds.join(',')})";
+
+      // TOTAL LIKES
+      final likesRes = await supabase
+          .from('likes')
+          .select('item_id')
+          .filter('item_id', 'in', idList);
+
+      totalLikes.value = likesRes.length;
+
+      // TOTAL COMMENTS
+      final commentsRes = await supabase
+          .from('comments')
+          .select('item_id')
+          .eq('is_deleted', false)
+          .filter('item_id', 'in', idList);
+
+      totalComments.value = commentsRes.length;
     } catch (e) {
       print("fetchProfileStats error: $e");
     } finally {

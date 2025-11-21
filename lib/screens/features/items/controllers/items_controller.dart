@@ -430,27 +430,34 @@ class ItemController extends GetxController {
     required double? purchasePrice,
     required double? estimatedValue,
     required String description,
+    required String shortDesciption,
     required String visibility,
     DateTime? acquisitionDate,
     String? condition,
-    required List<String> imageUrls, // final updated list
+
+    // 👇 FINAL list of images to keep (old + uploaded)
+    required List<String> finalImageUrls,
+
+    // 👇 List of only old images removed by user
+    required List<String> removedOldImageUrls,
   }) async {
     try {
       isLoading.value = true;
 
-      // ✅ Validate user
+      // Validate User
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
         print("⚠️ User not logged in");
         return false;
       }
 
-      // ✅ Data to update
+      // Update Items row
       final itemData = {
         'collection_id': collectionId,
         'category_id': categoryId,
         'name': name,
         'description': description,
+        'short_description': shortDesciption,
         'purchase_price': purchasePrice,
         'estimated_value': estimatedValue,
         'acquisition_date': acquisitionDate?.toIso8601String(),
@@ -459,15 +466,37 @@ class ItemController extends GetxController {
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      // ✅ Update main item row
       await supabase.from('items').update(itemData).eq('item_id', itemId);
 
-      // ✅ Remove old image records (but do NOT delete from storage)
-      await supabase.from('item_images').delete().eq('item_id', itemId);
+      // -----------------------------------------------------------
+      // 🔥 DELETE REMOVED OLD IMAGES ONLY (NOT ALL)
+      // -----------------------------------------------------------
+      for (var url in removedOldImageUrls) {
+        await supabase
+            .from('item_images')
+            .delete()
+            .eq('item_id', itemId)
+            .eq('image_url', url);
+      }
 
-      // ✅ Add new image records
-      for (var imageUrl in imageUrls) {
-        await _saveImageRecord(imageUrl, itemId);
+      // -----------------------------------------------------------
+      // 🔥 INSERT IMAGES THAT DO NOT EXIST IN DB (NEW ONES)
+      // -----------------------------------------------------------
+      for (var url in finalImageUrls) {
+        final exists = await supabase
+            .from('item_images')
+            .select()
+            .eq('item_id', itemId)
+            .eq('image_url', url)
+            .maybeSingle();
+
+        if (exists == null) {
+          await supabase.from('item_images').insert({
+            'item_id': itemId,
+            'image_url': url,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        }
       }
 
       return true;
