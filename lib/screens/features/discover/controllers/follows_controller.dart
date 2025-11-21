@@ -172,8 +172,6 @@ class FollowController extends GetxController {
         'receiver_id': targetUserId,
         'status': 'pending',
       });
-
-      Get.snackbar("Request Sent", "Private user must approve your request.");
     } catch (e) {
       print("Error sendFollowRequest: $e");
       Get.snackbar("Error", "Failed to send request.");

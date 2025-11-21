@@ -16,26 +16,22 @@ class _ItemsScreenState extends State<ItemsScreen> {
   final ItemController itemController = Get.put(ItemController());
 
   final TextEditingController searchController = TextEditingController();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    itemController.getItemsByUser();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.themeColor,
       appBar: AppBar(
-        title: const Text('My Items', style: TextStyle(color: Colors.black)),
-        centerTitle: true,
+        title: const Text('My Items', style: TextStyle(color: Colors.white)),
+        backgroundColor: AppColors.themeColor,
         elevation: 0,
-
-        // ✅ add gradient here
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFD4AF37), Color(0xFFB38A2D)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -86,10 +82,22 @@ class _ItemsScreenState extends State<ItemsScreen> {
               }
 
               if (itemController.filteredItems.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'No items found',
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                return Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/no_data_found.png',
+                        height: 150,
+                        width: 1050,
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        'No items found',
+                        style: TextStyle(fontSize: 16, color: Colors.white70),
+                      ),
+                    ],
                   ),
                 );
               }

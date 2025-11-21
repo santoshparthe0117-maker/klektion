@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:klektion/utils/color_constants.dart';
 import '../../discover/controllers/follows_controller.dart';
 
 class FollowersPage extends StatefulWidget {
@@ -21,10 +22,10 @@ class _FollowersPageState extends State<FollowersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.themeColor,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.themeColor,
         elevation: 0,
         title: const Text("Followers", style: TextStyle(color: Colors.white)),
       ),

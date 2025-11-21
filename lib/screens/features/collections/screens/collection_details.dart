@@ -5,14 +5,20 @@ import 'package:klektion/utils/color_constants.dart';
 
 import '../../items/controllers/items_controller.dart';
 import '../../items/models/items_model.dart';
+import '../../items/screens/add_items_screen.dart';
 import '../../items/screens/item_details_screen.dart';
 import '../controllers/collections_controller.dart';
 import '../models/collection_model.dart';
 
 class CollectionDetailsScreen extends StatefulWidget {
   final CollectionModel collection;
+  final bool? isShowAdd;
 
-  const CollectionDetailsScreen({super.key, required this.collection});
+  const CollectionDetailsScreen({
+    super.key,
+    required this.collection,
+    this.isShowAdd,
+  });
 
   @override
   State<CollectionDetailsScreen> createState() =>
@@ -22,6 +28,9 @@ class CollectionDetailsScreen extends StatefulWidget {
 class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
   final ItemController itemController = Get.find<ItemController>();
   final controller = Get.find<CollectionController>();
+  final goldGradient = const LinearGradient(
+    colors: [Color(0xFFB08A0B), Color(0xFFD4AF37), Color(0xFFFFE29F)],
+  );
 
   double totalValue = 0.0;
   double totalPurchase = 0.0;
@@ -221,12 +230,27 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                           fontSize: 16,
                         ),
                       ),
-                      // ElevatedButton(
-                      //   onPressed: () {
-                      //     Get.to(() => AddItemScreen());
-                      //   },
-                      //   child: const Text("Add Item"),
-                      // ),
+                      widget.isShowAdd != null
+                          ? SizedBox()
+                          : InkWell(
+                              onTap: () async {
+                                await Get.to(
+                                  () => AddItemScreen(
+                                    collectionId:
+                                        widget.collection.collectionId,
+                                  ),
+                                );
+                                getItems();
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  gradient: goldGradient,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Text("Add Item"),
+                              ),
+                            ),
                     ],
                   ),
 

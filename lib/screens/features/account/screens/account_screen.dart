@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:klektion/screens/features/account/screens/noticiaction_request.dart';
+import 'package:klektion/screens/features/account/screens/request_screen.dart';
 import 'package:klektion/screens/features/auth/screens/signin_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../../../../controllers/auth_controller.dart';
 import '../controllers/export_controller.dart';
 import '../controllers/profile_stats_controller.dart';
-import 'categories_scrern.dart';
+import 'categories_screen.dart';
 import 'followers_screen.dart';
 import 'following_page.dart';
 

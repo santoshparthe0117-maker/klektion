@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../utils/color_constants.dart';
 import '../../discover/controllers/follows_controller.dart';
 
 class FollowingPage extends StatefulWidget {
@@ -21,10 +22,11 @@ class _FollowingPageState extends State<FollowingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.themeColor,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.themeColor,
+
         elevation: 0,
         title: const Text("Following", style: TextStyle(color: Colors.white)),
       ),

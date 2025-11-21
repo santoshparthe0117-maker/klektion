@@ -16,7 +16,8 @@ import '../controllers/items_controller.dart';
 
 class AddItemScreen extends StatefulWidget {
   final ItemModel? item;
-  const AddItemScreen({super.key, this.item});
+  final String? collectionId;
+  const AddItemScreen({super.key, this.item, this.collectionId});
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
@@ -52,6 +53,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   bool isLoadingLocal = true; // for initial data load
   bool isEditMode = false;
+  bool isCollectionLocked = false;
 
   final goldGradient = const LinearGradient(
     colors: [Color(0xFFB08A0B), Color(0xFFD4AF37), Color(0xFFFFE29F)],
@@ -71,7 +73,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   Future<void> _initData() async {
     // load collections/categories (if not already loaded)
-    await _collectionController.getCollections();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _collectionController.getCollections();
+    });
+
     await _category_controllerSafeFetch();
     // set initial values if editing
     if (widget.item != null) {
@@ -88,6 +94,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
       selectedPrivacy = item.visibility ?? 'private';
       // keep old images as URL list
       oldImageUrls = List<String>.from(item.images);
+    }
+    if (widget.collectionId != null) {
+      setState(() {
+        isCollectionLocked = true; // 🔒 LOCK THE DROPDOWN
+      });
+      selectedCollectionId = widget.collectionId;
     }
     setState(() {
       isLoadingLocal = false;
@@ -128,9 +140,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
         elevation: 0,
         title: Text(
           isEditMode ? 'Edit Item' : 'Add Item',
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppColors.primaryColor),
         ),
-        leading: BackButton(color: Colors.white),
+        leading: BackButton(color: AppColors.primaryColor),
       ),
       body: isLoadingLocal
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
@@ -157,6 +169,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     ),
                     _dropdownWithId(
                       label: "Add to Collection",
+                      isCollectionLocked: isCollectionLocked,
                       items: _collectionController.collections
                           .map((c) => {'name': c.name, 'id': c.collectionId})
                           .toList(),
@@ -363,36 +376,61 @@ class _AddItemScreenState extends State<AddItemScreen> {
     required String? value,
     required Function(String?) onChanged,
     bool isRequired = true,
+    bool? isCollectionLocked,
   }) {
-    // Build DropdownMenuItem<String> list
+    // Build items
     final dropdownItems = items.map((e) {
       final id = e['id']?.toString() ?? '';
       final name = e['name']?.toString() ?? '';
+
       return DropdownMenuItem<String>(
         value: id,
-        child: Text(name, style: const TextStyle(color: Colors.white)),
+        child: SizedBox(
+          width: double.infinity, // ⬅️ critical for long text
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
       );
     }).toList();
 
-    // important: if current value isn't present in list, set value to null to avoid assertion
+    // Ensure valid value
     final valueExists = dropdownItems.any((d) => d.value == value);
     final effectiveValue = valueExists ? value : null;
+
+    bool isDisabled = isCollectionLocked ?? false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Colors.white)),
         const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          dropdownColor: const Color(0xFF1C2B22),
-          value: effectiveValue,
-          onChanged: onChanged,
-          validator: (v) => (isRequired && (v == null || v.isEmpty))
-              ? "Please select $label"
-              : null,
-          items: dropdownItems,
-          decoration: _fieldDecoration(),
+
+        // important: give dropdown full width using SizedBox
+        SizedBox(
+          width: double.infinity,
+          child: DropdownButtonFormField<String>(
+            isExpanded: true, // ⬅️ expansion fix for long text
+            dropdownColor: const Color(0xFF1C2B22),
+
+            value: effectiveValue,
+            onChanged: isDisabled ? null : onChanged,
+
+            validator: (v) => (isRequired && (v == null || v.isEmpty))
+                ? "Please select $label"
+                : null,
+
+            items: dropdownItems,
+            decoration: _fieldDecoration(),
+
+            // prevent text being overly padded
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+          ),
         ),
+
         const SizedBox(height: 12),
       ],
     );
@@ -632,6 +670,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         if (success) {
           Get.back(result: true);
           Get.snackbar("Success", "Item added successfully");
+          _itemController.getRecentItems();
         } else {
           Get.snackbar("Error", "Failed to add item");
         }

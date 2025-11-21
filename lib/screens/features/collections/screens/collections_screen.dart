@@ -73,6 +73,7 @@ class CollectionsScreen extends StatelessWidget {
                   return Center(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
 
                       children: [
                         Image.asset(

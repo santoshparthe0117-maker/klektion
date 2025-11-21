@@ -182,7 +182,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     final collection = CollectionModel.fromJson(data);
     return InkWell(
       onTap: () {
-        Get.to(() => CollectionDetailsScreen(collection: collection));
+        Get.to(
+          () =>
+              CollectionDetailsScreen(collection: collection, isShowAdd: true),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -265,6 +268,21 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
+  Widget _buildAvatarFallback(String? name) {
+    if (name != null && name.isNotEmpty) {
+      return Text(
+        name[0].toUpperCase(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+
+    return const Icon(Icons.person, color: Colors.white70);
+  }
+
   Widget _userCard(dynamic user) {
     final userId = user['user_id'];
     final visibility = user['visibility']; // public / private
@@ -300,12 +318,22 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           children: [
             CircleAvatar(
               radius: 25,
-              backgroundImage: user['avatar_url'] != null
-                  ? NetworkImage(user['avatar_url'])
-                  : null,
-              child: user['avatar_url'] == null
-                  ? Icon(Icons.person, color: Colors.white70)
-                  : null,
+              backgroundColor: Colors.grey.shade800,
+              child: ClipOval(
+                child:
+                    (user['avatar_url'] != null &&
+                        user['avatar_url'].toString().isNotEmpty)
+                    ? Image.network(
+                        user['avatar_url'],
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildAvatarFallback(user['name']);
+                        },
+                      )
+                    : _buildAvatarFallback(user['name']),
+              ),
             ),
 
             const SizedBox(width: 12),

@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:klektion/loadings/shimer_loading.dart';
 import 'package:klektion/loadings/shimmer_loading_designs.dart';
+import 'package:klektion/screens/features/collections/screens/create_collections.dart';
 import 'package:klektion/screens/features/items/controllers/items_controller.dart';
+import 'package:klektion/screens/features/items/screens/add_items_screen.dart';
 import 'package:klektion/screens/features/items/screens/items_screen.dart';
 import 'package:klektion/screens/features/wish_list/screens/wish_list_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
@@ -264,6 +266,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                                  SizedBox(height: 10),
+                                  InkWell(
+                                    onTap: () {
+                                      Get.to(CollectionsScreen());
+                                      Get.to(CreateCollectionScreen());
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(5),
+                                        gradient: goldGradient,
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 10,
+                                        horizontal: 20,
+                                      ),
+                                      child: Text(
+                                        '+ Add Collection',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             )
@@ -314,6 +339,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  InkWell(
+                                    onTap: () {
+                                      Get.to(ItemsScreen());
+                                      Get.to(AddItemScreen());
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(5),
+                                        gradient: goldGradient,
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 10,
+                                        horizontal: 20,
+                                      ),
+                                      child: Text(
+                                        '+ Add Item',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
