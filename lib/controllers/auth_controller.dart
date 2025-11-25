@@ -1,5 +1,7 @@
+import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../bindings/app_binding.dart';
@@ -234,7 +236,7 @@ class AuthController extends GetxController {
     _setState(AuthState.loading);
 
     try {
-      // 1️⃣ Step 1: Create user in Supabase Auth
+      // 1️⃣ Create user in Supabase Auth
       final authResponse = await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
@@ -250,11 +252,14 @@ class AuthController extends GetxController {
 
       debugPrint("✅ Auth user created: ${authUser.id}");
 
-      // 2️⃣ Step 2: Create matching record in your custom 'users' table
+      // 2️⃣ Hash password using bcrypt BEFORE storing
+      final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+      // 3️⃣ Store user profile in your custom 'users' table
       final userProfile = {
         'user_id': authUser.id,
         'email': email ?? '',
-        'password_hash': password, // ⚠️ Store hashed in production
+        'password_hash': hashedPassword, // 🔥 SAFE HASHED VALUE
         'name': username,
         'avatar_url': '',
         'bio': '',
@@ -269,7 +274,7 @@ class AuthController extends GetxController {
           .select()
           .maybeSingle();
 
-      // 3️⃣ Step 3: Fetch the full user record from 'users' table
+      // 4️⃣ Fetch user model
       final userResponse = await Supabase.instance.client
           .from('users')
           .select()
@@ -281,27 +286,21 @@ class AuthController extends GetxController {
         return false;
       }
 
-      // 4️⃣ Step 4: Convert to UserModel
       final userModel = UserModel.fromJson(userResponse);
-
-      // 5️⃣ Step 5: Store user in observable
       _user.value = userModel;
 
-      // ✅ Automatically handled: Supabase persists the session internally
       _setState(AuthState.authenticated);
 
       debugPrint("✅ UserModel created: ${userModel.name}");
       return true;
-    } on PostgrestException catch (e) {
-      _setError('Database error: ${e.message}');
-      return false;
-    } on AuthException catch (e) {
-      _setError('Auth error: ${e.message}');
-      return false;
     } catch (e) {
-      _setError('Sign up failed: ${e.toString()}');
+      _setError('Sign up failed: $e');
       return false;
     }
+  }
+
+  bool verifyPassword(String password, String hashed) {
+    return BCrypt.checkpw(password, hashed);
   }
 
   Future<bool> signIn({
@@ -312,6 +311,8 @@ class AuthController extends GetxController {
 
     try {
       // 🔹 Step 1: Sign in user with Supabase Auth
+
+      String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
       final response = await Supabase.instance.client.auth.signInWithPassword(
         email: mobileNo, // You can replace with logic to detect email/phone
         password: password,
@@ -352,7 +353,7 @@ class AuthController extends GetxController {
         return false;
       }
     } on AuthException catch (e) {
-      debugPrint('⚠️ AuthException: ${e.message}');
+      // debugPrint('⚠️ AuthException: ${e.message}');
       _setError('Authentication failed: ${e.message}');
       return false;
     } catch (e, stack) {
@@ -412,6 +413,136 @@ class AuthController extends GetxController {
       return true; // ✅ logout success
     } catch (e) {
       debugPrint("Logout error: $e");
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) {
+        Get.snackbar("Error", "User not logged in");
+        return false;
+      }
+
+      // 1️⃣ Fetch user record from DB
+      final record = await supabase
+          .from('users')
+          .select()
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (record == null) {
+        Get.snackbar("Error", "User profile not found");
+        return false;
+      }
+
+      final storedHashedPassword = record['password_hash'];
+      print(BCrypt.hashpw(oldPassword, BCrypt.gensalt()));
+
+      // 2️⃣ Verify old password
+      final isCorrect = BCrypt.checkpw(oldPassword, storedHashedPassword);
+
+      if (!isCorrect) {
+        Get.snackbar("Error", "Old password is incorrect");
+        return false;
+      }
+
+      // 3️⃣ Update Supabase Auth password
+      await supabase.auth.updateUser(UserAttributes(password: newPassword));
+
+      // 4️⃣ Hash new password
+      final newHashedPassword = BCrypt.hashpw(
+        newPassword,
+        BCrypt.gensalt(), // <-- auto generates a proper salt
+      );
+
+      // 5️⃣ Update users table password
+      await supabase
+          .from('users')
+          .update({
+            'password_hash': newHashedPassword,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('user_id', user.id);
+
+      Get.snackbar("Success", "Password updated successfully");
+      return true;
+    } catch (e) {
+      Get.snackbar("Error", "Failed to update password: $e");
+      return false;
+    }
+  }
+
+  Future<void> reloadUserData() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final record = await supabase
+        .from('users')
+        .select()
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (record != null) {
+      _user.value = UserModel.fromJson(record);
+    }
+  }
+
+  Future<bool> updateProfile({
+    required String name,
+    // required String email,
+    required String bio,
+    XFile? avatarFile,
+  }) async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) {
+        Get.snackbar("Error", "User not logged in");
+        return false;
+      }
+
+      String? uploadedAvatarUrl;
+
+      // 1️⃣ Upload avatar if selected
+      if (avatarFile != null) {
+        final bytes = await avatarFile.readAsBytes();
+        final ext = avatarFile.path.split(".").last;
+        final fileName = "${user.id}/avatar_$ext";
+
+        await supabase.storage
+            .from("avatars") // Your bucket
+            .uploadBinary(
+              fileName,
+              bytes,
+              fileOptions: const FileOptions(upsert: true),
+            );
+
+        uploadedAvatarUrl = supabase.storage
+            .from("avatars")
+            .getPublicUrl(fileName);
+      }
+
+      // 2️⃣ Update DB record
+      final updateData = {
+        "name": name,
+        // "email": email,
+        "bio": bio,
+        "updated_at": DateTime.now().toIso8601String(),
+      };
+
+      if (uploadedAvatarUrl != null) {
+        updateData["avatar_url"] = uploadedAvatarUrl;
+      }
+
+      await supabase.from("users").update(updateData).eq("user_id", user.id);
+
+      return true;
+    } catch (e) {
+      Get.snackbar("Error", "Failed to update profile: $e");
       return false;
     }
   }

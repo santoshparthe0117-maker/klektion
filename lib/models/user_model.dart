@@ -5,6 +5,8 @@ class UserModel {
   final String email;
   final String passwordHash;
   final String mobile;
+  final String avatarUrl; // ✅ NEW
+  final String bio; // ✅ NEW
   final bool isActive;
   final bool isDeleted;
   final bool hasRequestedVendorApproval;
@@ -18,6 +20,8 @@ class UserModel {
     required this.email,
     required this.passwordHash,
     required this.mobile,
+    required this.avatarUrl, // added
+    required this.bio, // added
     required this.isActive,
     required this.isDeleted,
     required this.hasRequestedVendorApproval,
@@ -25,7 +29,7 @@ class UserModel {
     required this.updatedAt,
   });
 
-  /// Factory method to create an instance from JSON
+  /// Factory method to create model from JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       userId: json['user_id'] ?? '',
@@ -34,6 +38,8 @@ class UserModel {
       email: json['email'] ?? '',
       passwordHash: json['password_hash'] ?? '',
       mobile: json['mobile'] ?? '',
+      avatarUrl: json['avatar_url'] ?? '', // added
+      bio: json['bio'] ?? '', // added
       isActive: json['is_active'] ?? false,
       isDeleted: json['is_deleted'] ?? false,
       hasRequestedVendorApproval:
@@ -43,7 +49,7 @@ class UserModel {
     );
   }
 
-  /// Convert model to JSON for Supabase
+  /// Convert model to JSON map
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
@@ -52,6 +58,8 @@ class UserModel {
       'email': email,
       'password_hash': passwordHash,
       'mobile': mobile,
+      'avatar_url': avatarUrl, // added
+      'bio': bio, // added
       'is_active': isActive,
       'is_deleted': isDeleted,
       'has_requested_vendor_approval': hasRequestedVendorApproval,
@@ -60,7 +68,7 @@ class UserModel {
     };
   }
 
-  /// Copy method for immutability
+  /// CopyWith for immutability
   UserModel copyWith({
     String? userId,
     String? userTypeId,
@@ -68,6 +76,8 @@ class UserModel {
     String? email,
     String? passwordHash,
     String? mobile,
+    String? avatarUrl, // added
+    String? bio, // added
     bool? isActive,
     bool? isDeleted,
     bool? hasRequestedVendorApproval,
@@ -81,6 +91,8 @@ class UserModel {
       email: email ?? this.email,
       passwordHash: passwordHash ?? this.passwordHash,
       mobile: mobile ?? this.mobile,
+      avatarUrl: avatarUrl ?? this.avatarUrl, // added
+      bio: bio ?? this.bio, // added
       isActive: isActive ?? this.isActive,
       isDeleted: isDeleted ?? this.isDeleted,
       hasRequestedVendorApproval:
@@ -92,7 +104,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(userId: $userId, name: $name, email: $email, mobile: $mobile, active: $isActive)';
+    return 'UserModel(userId: $userId, name: $name, email: $email, mobile: $mobile)';
   }
 
   @override

@@ -16,7 +16,8 @@ class AppConstants {
   static const int maxUsernameLength = 50;
 
   // Mobile number validation (Indian format)
-  static const String mobileNumberPattern = r'^[6-9]\d{9}$';
+  static const String mobileNumberPattern =
+      r'^(\+1\s?)?(\()?([2-9][0-8][0-9])(\))?[\s.-]?([2-9][0-9]{2})[\s.-]?([0-9]{4})$';
 
   // Routes
   static const String splashRoute = '/';

@@ -156,6 +156,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     const Text("Photos", style: TextStyle(color: Colors.white)),
                     const SizedBox(height: 8),
                     _buildImagesRow(),
+                    const SizedBox(height: 5),
+                    Text(
+                      " You can upload a maximum of 5 images.",
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
 
                     const SizedBox(height: 16),
                     _input("Item Name", "e.g., Rolex Submariner", nameCtrl),
@@ -610,6 +615,13 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
     if (isEditMode && newImages.isEmpty && oldImageUrls.isEmpty) {
       Get.snackbar("Error", "Please have at least 1 image");
+      return;
+    }
+
+    int totalImages = newImages.length + oldImageUrls.length;
+
+    if (totalImages > 5) {
+      Get.snackbar("Error", "You cannot upload more than 5 images");
       return;
     }
 

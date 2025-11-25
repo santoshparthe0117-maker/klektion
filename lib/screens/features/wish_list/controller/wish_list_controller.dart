@@ -22,16 +22,17 @@ class WishlistController extends GetxController {
       final response = await supabase
           .from('wishlist')
           .select('''
-            item:items(
-              *,
-              item_images(image_url),
-              likes(count),
-              liked_by:likes(user_id),
-              wishlist(count),
-              wishlisted_by:wishlist(user_id)
-            )
-          ''')
-          .eq('user_id', userId);
+          item:items(
+            *,
+            item_images(image_url),
+            likes(count),
+            liked_by:likes(user_id),
+            wishlist(count),
+            wishlisted_by:wishlist(user_id)
+          )
+        ''')
+          .eq('user_id', userId)
+          .eq('items.is_deleted', false); // 🔥 added filter here
 
       wishlistItems.value = response
           .map<ItemModel>((e) => ItemModel.fromJson(e['item']))
@@ -90,13 +91,13 @@ class WishlistController extends GetxController {
   }
 
   /// ✅ Toggle wishlist state (add/remove)
-  Future<void> toggleWishlist(ItemModel item) async {
-    if (item.isWishlisted) {
-      await removeFromWishlist(item.itemId);
-    } else {
-      await addToWishlist(item.itemId);
-    }
-  }
+  // Future<void> toggleWishlist(ItemModel item) async {
+  //   if (item.isWishlisted) {
+  //     await removeFromWishlist(item.itemId);
+  //   } else {
+  //     await addToWishlist(item.itemId);
+  //   }
+  // }
 
   Future<void> fetchRecentItems() async {
     try {

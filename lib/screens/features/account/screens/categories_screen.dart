@@ -4,6 +4,8 @@ import 'package:klektion/utils/color_constants.dart';
 import '../controllers/categories_controller.dart';
 
 class CategoriesScreen extends StatefulWidget {
+  const CategoriesScreen({super.key});
+
   @override
   State<CategoriesScreen> createState() => _CategoriesScreenState();
 }
@@ -55,70 +57,105 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   // ✅ Unique Gradient Category Card -------------------------
   Widget _categoryCard(category) {
     return InkWell(
-      onTap: () {}, // future: navigate to items
-      borderRadius: BorderRadius.circular(18),
+      onTap: () {},
+      borderRadius: BorderRadius.circular(20),
+      splashColor: Colors.white.withOpacity(0.1),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFFD4AF37), Color(0xFFB48A2D)],
+            colors: [Color(0xFFF3DFA2), Color(0xFFE6C56F), Color(0xFFC79A32)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(2, 4),
+              color: Colors.black.withOpacity(0.25),
+              blurRadius: 12,
+              spreadRadius: 1,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon Section
+            // ICON BOX
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(14),
+                color: Colors.black.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.category, color: Colors.white),
+              child: const Icon(Icons.category, color: Colors.black, size: 26),
             ),
 
             const SizedBox(width: 16),
 
-            // Name + Description
+            // TEXT COLUMN
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Title
                   Text(
                     category.name,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
                   ),
+
+                  const SizedBox(height: 4),
+
+                  // Description
                   if (category.description != null &&
                       category.description.isNotEmpty)
                     Text(
                       category.description ?? "",
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 13,
+                        color: Colors.black.withOpacity(0.9),
+                        fontSize: 14,
+                        height: 1.3,
                       ),
                     ),
                 ],
               ),
             ),
 
-            IconButton(
-              icon: const Icon(Icons.edit, color: Colors.white),
-              onPressed: () => _showUpdatePopup(context, category.categoryId),
+            const SizedBox(width: 10),
+
+            // EDIT & DELETE BUTTONS COLUMN
+            Column(
+              children: [
+                // EDIT
+                InkWell(
+                  borderRadius: BorderRadius.circular(30),
+                  onTap: () => _showUpdatePopup(context, category.categoryId),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.edit, color: Colors.white, size: 22),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // DELETE
+                InkWell(
+                  borderRadius: BorderRadius.circular(30),
+                  onTap: () {
+                    _confirmDelete(context, category.categoryId);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.delete, color: Colors.red, size: 22),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -137,6 +174,50 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           fontWeight: FontWeight.w500,
         ),
       ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String categoryId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            "Delete Category",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            "Are you sure you want to delete this category?",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                controller.deleteCategory(
+                  categoryId,
+                ); // 🔥 CALL DELETE FUNCTION
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

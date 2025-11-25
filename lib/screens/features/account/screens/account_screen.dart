@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:klektion/screens/features/account/screens/edit_profile_screen.dart';
 import 'package:klektion/screens/features/account/screens/request_screen.dart';
 import 'package:klektion/screens/features/auth/screens/signin_screen.dart';
 import 'package:klektion/utils/color_constants.dart';
@@ -8,6 +9,7 @@ import '../../../../controllers/auth_controller.dart';
 import '../controllers/export_controller.dart';
 import '../controllers/profile_stats_controller.dart';
 import 'categories_screen.dart';
+import 'change_password.dart';
 import 'followers_screen.dart';
 import 'following_page.dart';
 
@@ -77,6 +79,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontSize: isTablet ? 24 : 20,
                           fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.settings, color: Colors.white),
+                        onPressed: () {
+                          final RenderBox overlay =
+                              Overlay.of(context).context.findRenderObject()
+                                  as RenderBox;
+
+                          showMenu(
+                            context: context,
+                            position: RelativeRect.fromLTRB(100, 80, 20, 0),
+                            items: [
+                              PopupMenuItem(
+                                value: "edit",
+                                child: Row(
+                                  children: const [
+                                    Icon(Icons.person),
+                                    SizedBox(width: 8),
+                                    Text("Edit Profile"),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: "password",
+                                child: Row(
+                                  children: const [
+                                    Icon(Icons.lock),
+                                    SizedBox(width: 8),
+                                    Text("Change Password"),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ).then((value) {
+                            if (value == "edit") {
+                              Get.to(EditProfilePage());
+                            }
+                            if (value == "password") {
+                              Get.to(() => ChangePasswordPage());
+                            }
+                          });
+                        },
                       ),
                     ],
                   ),

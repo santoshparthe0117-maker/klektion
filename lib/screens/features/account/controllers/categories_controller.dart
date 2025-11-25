@@ -17,6 +17,7 @@ class CategoryController extends GetxController {
           .from('categories')
           .select()
           .eq('user_id', userId)
+          .eq('is_deleted', false) // 🔥 only non-deleted categories
           .order('created_at', ascending: false);
 
       categories.value = response
@@ -81,6 +82,32 @@ class CategoryController extends GetxController {
     } catch (e) {
       print("Update category error: $e");
       return false;
+    }
+  }
+
+  Future<void> deleteCategory(String categoryId) async {
+    try {
+      isLoading.value = true;
+
+      // 🔥 Soft delete (recommended)
+      await supabase
+          .from('categories')
+          .update({'is_deleted': true})
+          .eq('category_id', categoryId);
+
+      // 🧹 Remove from local list instantly
+      categories.removeWhere((c) => c.categoryId == categoryId);
+
+      Get.snackbar(
+        "Deleted",
+        "Category removed successfully",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print("Delete category error: $e");
+      Get.snackbar("Error", "Failed to delete category");
+    } finally {
+      isLoading.value = false;
     }
   }
 }

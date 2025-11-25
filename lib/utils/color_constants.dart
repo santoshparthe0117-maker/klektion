@@ -33,3 +33,7 @@ final LinearGradient goldGradient = const LinearGradient(
   ],
   stops: [0.0, 0.35, 0.70, 1.0],
 );
+
+final buttonGradient = const LinearGradient(
+  colors: [Color(0xFFB08A0B), Color(0xFFD4AF37), Color(0xFFFFE29F)],
+);

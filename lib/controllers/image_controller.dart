@@ -1,3 +1,4 @@
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
@@ -59,14 +60,42 @@ class ImageController {
 
       for (int i = 0; i < images.length; i++) {
         final image = images[i];
-        final fileName = await uploadSingleImage(image, bucketName);
 
-        if (fileName != null) {
-          final publicUrl = supabase.storage
-              .from(bucketName)
-              .getPublicUrl(fileName);
-          uploadedUrls.add(publicUrl);
+        // 🔥 COMPRESS IMAGE BEFORE UPLOADING
+        final compressedBytes = await FlutterImageCompress.compressWithFile(
+          image.path,
+          quality: 60, // lower = more compression
+          minWidth: 1080,
+          minHeight: 1080,
+          format: CompressFormat.jpeg,
+        );
+
+        if (compressedBytes == null) {
+          print("Compression failed for: ${image.name}");
+          continue;
         }
+
+        // Create compressed file name
+        final fileName = '$userId/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        // Upload compressed Bytes
+        await supabase.storage
+            .from(bucketName)
+            .uploadBinary(
+              fileName,
+              compressedBytes,
+              fileOptions: FileOptions(
+                contentType: "image/jpeg",
+                upsert: false,
+              ),
+            );
+
+        // Get public URL
+        final publicUrl = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+
+        uploadedUrls.add(publicUrl);
       }
 
       return uploadedUrls;
@@ -84,20 +113,30 @@ class ImageController {
       if (userId == null) {
         throw Exception('User not authenticated');
       }
-      final bytes = await image.readAsBytes();
-      final fileExt = path.extension(image.path).toLowerCase();
-      final fileName =
-          '${userId}/${DateTime.now().millisecondsSinceEpoch}$fileExt';
 
-      // Get MIME type
-      final mimeType = lookupMimeType(image.path) ?? 'image/jpeg';
+      // COMPRESS THE IMAGE 🔥
+      final compressedBytes = await FlutterImageCompress.compressWithFile(
+        image.path,
+        quality: 60, // Reduce this value to reduce size more
+        minWidth: 1080,
+        minHeight: 1080,
+        format: CompressFormat.jpeg,
+      );
+
+      if (compressedBytes == null) {
+        throw Exception('Image compression failed');
+      }
+
+      final fileExt = ".jpg"; // always upload as jpg
+      final fileName =
+          '$userId/${DateTime.now().millisecondsSinceEpoch}$fileExt';
 
       await supabase.storage
           .from(bucketName)
           .uploadBinary(
             fileName,
-            bytes,
-            fileOptions: FileOptions(contentType: mimeType, upsert: false),
+            compressedBytes,
+            fileOptions: FileOptions(contentType: "image/jpeg", upsert: false),
           );
 
       return fileName;

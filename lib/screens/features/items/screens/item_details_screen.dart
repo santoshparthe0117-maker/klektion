@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:klektion/screens/features/wish_list/controller/wish_list_controller.dart';
 import 'package:klektion/utils/color_constants.dart';
 
 import '../controllers/comments_controller.dart';
@@ -17,6 +18,7 @@ class ItemDetailsScreen extends StatefulWidget {
 
 class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
   final ItemController itemController = Get.find<ItemController>();
+  final WishlistController wishlistController = Get.find<WishlistController>();
   late PageController _pageController;
   int currentIndex = 0;
 
@@ -149,7 +151,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                 child: Image.network(
                   item.images[index],
                   width: double.infinity,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => Container(
                     color: Colors.grey.shade800,
                     child: const Icon(
@@ -220,7 +222,10 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                           : Icons.favorite_border,
                       color: item.isWishlisted ? Colors.green : Colors.white,
                     ),
-                    onPressed: () => itemController.toggleWishlist(item.itemId),
+                    onPressed: () async {
+                      await itemController.toggleWishlist(item.itemId);
+                      wishlistController.fetchRecentItems();
+                    },
                   );
                 }),
               ),
