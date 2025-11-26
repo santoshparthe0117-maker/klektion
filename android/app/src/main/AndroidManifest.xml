@@ -43,7 +43,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- This must match your redirect scheme -->
                 <data
-                    android:scheme="com.example.klektion"
+                    android:scheme="com.klektion.klektion"
                     android:host="login-callback" />
             </intent-filter>
         </activity>

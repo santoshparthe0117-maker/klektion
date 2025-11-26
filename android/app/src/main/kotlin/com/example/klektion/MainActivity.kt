@@ -1,4 +1,4 @@
-package com.example.klektion
+package com.klektion.klektion
 
 import io.flutter.embedding.android.FlutterActivity
 

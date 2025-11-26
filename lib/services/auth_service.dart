@@ -131,7 +131,7 @@ class AuthService {
       // Trigger OAuth flow
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'com.example.klektion://login-callback/',
+        redirectTo: 'com.klektion.klektion://login-callback/',
       );
 
       // Wait for Supabase to update session after OAuth redirect

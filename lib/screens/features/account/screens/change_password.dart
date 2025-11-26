@@ -169,10 +169,19 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             if (value == null || value.isEmpty) {
               return "$label is required";
             }
-            if (label == "Confirm New Password" &&
-                value != confirmPassword.text) {
-              return "Passwords do not match";
+
+            if (label == "New Password") {
+              if (value.length < 6) {
+                return "Password must be at least 6 characters";
+              }
             }
+
+            if (label == "Confirm New Password") {
+              if (value != newPassword.text.trim()) {
+                return "Passwords do not match";
+              }
+            }
+
             return null;
           },
         ),

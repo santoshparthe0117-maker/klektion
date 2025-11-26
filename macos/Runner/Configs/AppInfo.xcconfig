@@ -8,7 +8,7 @@
 PRODUCT_NAME = klektion
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.klektion
+PRODUCT_BUNDLE_IDENTIFIER = com.klektion.klektion
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.klektion. All rights reserved.

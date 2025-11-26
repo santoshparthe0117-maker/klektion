@@ -70,7 +70,6 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-      controller.getRecentCollectionsWithItemCount();
     } else {
       Get.snackbar(
         'Error',

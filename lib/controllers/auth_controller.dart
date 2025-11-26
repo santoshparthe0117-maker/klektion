@@ -157,7 +157,7 @@ class AuthController extends GetxController {
       // 🔹 Step 1: Trigger Google OAuth
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'com.example.klektion://login-callback/',
+        redirectTo: 'com.klektion.klektion://login-callback/',
       );
 
       // Note: After redirect Google → back to app,

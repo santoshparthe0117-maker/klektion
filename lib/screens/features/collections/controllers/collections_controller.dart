@@ -116,6 +116,7 @@ class CollectionController extends GetxController {
       }
 
       await getCollections(); // Refresh list
+      getRecentCollectionsWithItemCount();
       return true;
     } catch (e) {
       print("Add Collection error: $e");
