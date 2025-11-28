@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:klektion/controllers/image_controller.dart';
@@ -54,6 +56,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
   bool isLoadingLocal = true; // for initial data load
   bool isEditMode = false;
   bool isCollectionLocked = false;
+
+  String? currentAddress;
+  double? currentLatitude;
+  double? currentLongitude;
+  bool isGettingLocation = false;
 
   final goldGradient = const LinearGradient(
     colors: [Color(0xFFB08A0B), Color(0xFFD4AF37), Color(0xFFFFE29F)],
@@ -116,6 +123,59 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   Future<void> _category_controllerCall() async {
     await _categoryController.fetchCategories();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      setState(() => isGettingLocation = true);
+
+      // Check permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+        if (permission != LocationPermission.always &&
+            permission != LocationPermission.whileInUse) {
+          Get.snackbar(
+            "Permission Denied",
+            "Location permission is required to fetch your location",
+            backgroundColor: Colors.red,
+          );
+          setState(() => isGettingLocation = false);
+          return;
+        }
+      }
+
+      // Get position
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      currentLatitude = pos.latitude;
+      currentLongitude = pos.longitude;
+
+      // Reverse Geocode to address
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        pos.latitude,
+        pos.longitude,
+      );
+
+      final place = placemarks.first;
+
+      currentAddress =
+          "${place.street}, ${place.locality}, ${place.administrativeArea}, ${place.country}";
+
+      setState(() {});
+    } catch (e) {
+      print("Location error: $e");
+      Get.snackbar(
+        "Location Error",
+        e.toString(),
+        backgroundColor: Colors.redAccent,
+      );
+    } finally {
+      setState(() => isGettingLocation = false);
+    }
   }
 
   @override
@@ -201,6 +261,59 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     ),
                     const SizedBox(height: 12),
                     _textArea("Description", descCtrl),
+                    const SizedBox(height: 18),
+
+                    Text(
+                      "Location (Optional)",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              currentAddress == null
+                                  ? "Location not added"
+                                  : "Location: $currentAddress",
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryColor,
+                            ),
+                            onPressed: isGettingLocation
+                                ? null
+                                : _getCurrentLocation,
+                            child: isGettingLocation
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    "  Add Location  ",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 18),
 
                     Obx(() {

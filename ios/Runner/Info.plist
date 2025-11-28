@@ -71,6 +71,9 @@
 	<array>
 		<string>https://wabhbyqrzljpicmjceij.supabase.co</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Your location will be used to tag item location.</string>
+
 
 </dict>
 </plist>
