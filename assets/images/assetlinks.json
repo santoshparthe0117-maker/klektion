@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.klektion.app",
+      "sha256_cert_fingerprints": [
+        "62:53:EE:B1:30:F2:65:2C:A4:4E:19:B8:EC:40:AD:CF:6B:74:6D:42:41:C5:20:89:45:38:11:0D:66:0B:53:AC"
+      ]
+    }
+  }
+]

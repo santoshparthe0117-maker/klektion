@@ -195,7 +195,7 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        "Created ${_formatDate(widget.collection.createdAt)}",
+                        "Created : ${_formatDate(widget.collection.createdAt)}",
                         style: const TextStyle(color: Colors.white70),
                       ),
                     ],
@@ -248,7 +248,10 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                                   gradient: goldGradient,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const Text("Add Item"),
+                                child: const Text(
+                                  "+ Add Item",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ),
                     ],
@@ -331,9 +334,7 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
 
                   /// 🔥 Important!
                   /// Close the current CollectionDetailsScreen and return to previous list screen.
-                  Future.delayed(Duration(milliseconds: 120), () {
-                    Get.back(); // ⬅ go back to list screen
-                  });
+                  Get.back();
                 } else {
                   Get.snackbar(
                     "Error",
@@ -517,6 +518,6 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
   }
 
   String _formatDate(DateTime date) {
-    return "${date.month} ${date.year}";
+    return "${date.day}-${date.month}-${date.year}";
   }
 }

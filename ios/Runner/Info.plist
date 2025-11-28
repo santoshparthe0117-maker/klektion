@@ -45,15 +45,15 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
 	<key>NSCameraUsageDescription</key>
-		<string>This app needs camera access to take photos.</string>
+	<string>This app needs camera access to take photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-		<string>This app needs photo library access to pick images.</string>
+	<string>This app needs photo library access to pick images.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>Allow the app to save images to your gallery.</string>
+	<string>Allow the app to save images to your gallery.</string>
 
-
-	<!-- ✅ Supabase OAuth redirect configuration -->
+	<!-- Supabase OAuth redirect configuration -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -61,10 +61,16 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<!-- This must match your redirect scheme used in Flutter -->
 				<string>io.supabase.flutter</string>
 			</array>
 		</dict>
 	</array>
+
+	<!-- ✅ Added Associated Domains for Deep Linking -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>https://wabhbyqrzljpicmjceij.supabase.co</string>
+	</array>
+
 </dict>
 </plist>

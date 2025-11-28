@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:klektion/screens/features/wish_list/controller/wish_list_controller.dart';
 import 'package:klektion/utils/color_constants.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../controllers/comments_controller.dart';
 import '../controllers/items_controller.dart';
@@ -240,7 +241,13 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                     //   value: "edit",
                     //   child: Text("Edit Item"),
                     // ),
-                    const PopupMenuItem(value: "share", child: Text("Share")),
+                    PopupMenuItem(
+                      value: "share",
+                      child: Text("Share"),
+                      onTap: () {
+                        shareItem(item.itemId, item.name);
+                      },
+                    ),
                     PopupMenuItem(
                       value: "delete",
                       onTap: () {
@@ -260,6 +267,14 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
         ),
       ],
     );
+  }
+
+  void shareItem(String itemId, String itemTitle) {
+    final link = Uri.encodeFull(
+      'https://wabhbyqrzljpicmjceij.supabase.co/item/$itemId',
+    );
+    final text = 'Check out $itemTitle\n$link';
+    Share.share(text);
   }
 
   Widget _itemTitleSection(ItemModel item) {

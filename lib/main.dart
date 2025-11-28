@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'bindings/app_binding.dart';
 import 'routes/app_pages.dart';
 import 'routes/app_routes.dart';
+import 'services/deep_link_service.dart';
 import 'utils/color_constants.dart';
 import 'utils/constants.dart';
 
@@ -16,6 +17,8 @@ void main() async {
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
   );
+  final deepLinkService = DeepLinkService();
+  deepLinkService.init();
 
   runApp(const MyApp());
 }

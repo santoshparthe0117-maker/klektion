@@ -33,7 +33,8 @@ class DiscoverController extends GetxController {
       final response = await supabase
           .from("collections")
           .select("*, collection_images(image_url)")
-          .limit(10);
+          .eq("is_deleted", false) // 🔥 ADD THIS LINE
+          .limit(30);
 
       trendingCollections.value = response;
     } catch (e) {
