@@ -35,16 +35,22 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
   double totalValue = 0.0;
   double totalPurchase = 0.0;
   double growth = 0.0;
+  num collectionItemCount = 0;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getItems();
+    collectionItemCount = widget.collection.itemCount ?? 0;
   }
 
   void getItems() async {
     await itemController.getItemsByCollection(widget.collection.collectionId);
     _calculateCollectionStats();
+
+    setState(() {
+      collectionItemCount = itemController.itemListByCollection.length;
+    });
   }
 
   @override
@@ -190,7 +196,7 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                   Row(
                     children: [
                       Text(
-                        "${widget.collection.itemCount ?? 0} items",
+                        "${collectionItemCount.toString()} items",
                         style: const TextStyle(color: Colors.white70),
                       ),
                       const SizedBox(width: 10),

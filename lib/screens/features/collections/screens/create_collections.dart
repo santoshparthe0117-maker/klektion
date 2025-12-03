@@ -254,6 +254,8 @@ class _CreateCollectionScreenState extends State<CreateCollectionScreen> {
                   ),
                 ),
               ),
+
+              SizedBox(height: 30),
             ],
           ),
         ),

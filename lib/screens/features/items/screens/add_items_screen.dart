@@ -345,6 +345,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         ),
                       );
                     }),
+                    SizedBox(height: 30),
                   ],
                 ),
               ),
