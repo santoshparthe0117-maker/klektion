@@ -16,7 +16,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final authController = Get.find<AuthController>();
 
   late TextEditingController nameController;
-  late TextEditingController emailController;
+  late TextEditingController mobileNoController;
   late TextEditingController bioController;
 
   bool isLoading = false;
@@ -28,14 +28,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final user = authController.user;
 
     nameController = TextEditingController(text: user?.name ?? "");
-    emailController = TextEditingController(text: user?.email ?? "");
+    mobileNoController = TextEditingController(text: user?.email ?? "");
     bioController = TextEditingController(text: user?.bio ?? "");
   }
 
   @override
   void dispose() {
     nameController.dispose();
-    emailController.dispose();
+    mobileNoController.dispose();
     bioController.dispose();
     super.dispose();
   }
@@ -65,6 +65,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       Get.snackbar("Success", "Profile updated successfully");
       //Get.back();
       authController.reloadUserData();
+      authController.initializeAuth();
     }
   }
 
@@ -122,10 +123,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
             const SizedBox(height: 20),
 
-            _buildInput("Name", nameController),
+            _buildInput("User Name", nameController),
             const SizedBox(height: 15),
 
-            _buildInput("Email", emailController),
+            _buildInput("Mobile No", mobileNoController),
             const SizedBox(height: 15),
 
             _buildInput("Bio", bioController, maxLines: 3),

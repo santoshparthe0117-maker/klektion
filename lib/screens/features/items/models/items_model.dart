@@ -65,6 +65,9 @@ class ItemModel {
   final bool isDeleted;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? latitude;
+  final String? longitude;
+  final String? address;
 
   List<String> images;
   int likeCount;
@@ -99,6 +102,9 @@ class ItemModel {
     this.isWishlisted = false,
 
     this.commentCount = 0,
+    this.latitude,
+    this.longitude,
+    this.address,
   });
 
   factory ItemModel.fromJson(Map<String, dynamic> json) {
@@ -162,9 +168,10 @@ class ItemModel {
       isDeleted: json['is_deleted'] ?? false,
       createdAt: DateTime.tryParse(json['created_at'] ?? "") ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updated_at'] ?? "") ?? DateTime.now(),
-
+      latitude: json['latitude'],
+      longitude: json['longitude'],
+      address: json['address'],
       images: images,
-
       likeCount: likeCount,
       isLiked: isLiked,
 

@@ -367,7 +367,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
           ),
           const SizedBox(width: 12),
           _valueBox(
-            title: "Purchase Price",
+            title: "Initial Value",
             value: "\$${purchase.toStringAsFixed(2)}",
             growth:
                 "${isGrowth ? 'Profit' : 'Loss'} \$${profit.toStringAsFixed(2)}",

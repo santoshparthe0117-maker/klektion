@@ -1,5 +1,6 @@
 import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -189,6 +190,7 @@ class AuthController extends GetxController {
         final newUser = {
           'user_id': authUser.id,
           'email': authUser.email ?? '',
+          'user_name': authUser.userMetadata?['user_name'] ?? '',
           'name': authUser.userMetadata?['full_name'] ?? '',
           'avatar_url': authUser.userMetadata?['avatar_url'] ?? '',
           'password_hash': '',
@@ -229,6 +231,8 @@ class AuthController extends GetxController {
   }
 
   Future<bool> signUp({
+    required String userNameUser,
+
     required String username,
     required String password,
     String? email,
@@ -494,7 +498,6 @@ class AuthController extends GetxController {
 
   Future<bool> updateProfile({
     required String name,
-    // required String email,
     required String bio,
     XFile? avatarFile,
   }) async {
@@ -507,18 +510,34 @@ class AuthController extends GetxController {
 
       String? uploadedAvatarUrl;
 
-      // 1️⃣ Upload avatar if selected
+      // 1️⃣ Upload avatar (with compression)
       if (avatarFile != null) {
-        final bytes = await avatarFile.readAsBytes();
-        final ext = avatarFile.path.split(".").last;
-        final fileName = "${user.id}/avatar_$ext";
+        // 🔥 Compress image
+        final compressedBytes = await FlutterImageCompress.compressWithFile(
+          avatarFile.path,
+          quality: 60,
+          minWidth: 1080,
+          minHeight: 1080,
+          format: CompressFormat.jpeg,
+        );
+
+        if (compressedBytes == null) {
+          Get.snackbar("Error", "Image compression failed");
+          return false;
+        }
+
+        // 🔥 Always use jpg after compression
+        final fileName = "${user.id}/avatar.jpg";
 
         await supabase.storage
-            .from("avatars") // Your bucket
+            .from("avatars")
             .uploadBinary(
               fileName,
-              bytes,
-              fileOptions: const FileOptions(upsert: true),
+              compressedBytes,
+              fileOptions: const FileOptions(
+                contentType: "image/jpeg",
+                upsert: true,
+              ),
             );
 
         uploadedAvatarUrl = supabase.storage
@@ -526,10 +545,9 @@ class AuthController extends GetxController {
             .getPublicUrl(fileName);
       }
 
-      // 2️⃣ Update DB record
-      final updateData = {
+      // 2️⃣ Update user table
+      final Map<String, dynamic> updateData = {
         "name": name,
-        // "email": email,
         "bio": bio,
         "updated_at": DateTime.now().toIso8601String(),
       };

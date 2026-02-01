@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:klektion/models/user_model.dart';
 import 'package:klektion/screens/features/account/screens/edit_profile_screen.dart';
 import 'package:klektion/screens/features/account/screens/request_screen.dart';
 import 'package:klektion/screens/features/auth/screens/signin_screen.dart';
@@ -25,18 +26,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   final ProfileStatsController stats = Get.find<ProfileStatsController>();
   final exportController = Get.put(ExportController());
+  late UserModel? user;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    user = authController.user;
     stats.fetchProfileStats();
     stats.fetchVisibility();
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = authController.user;
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
@@ -112,9 +114,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                             ],
-                          ).then((value) {
+                          ).then((value) async {
                             if (value == "edit") {
-                              Get.to(EditProfilePage());
+                              await Get.to(EditProfilePage());
+                              setState(() {
+                                user = authController.user;
+                              });
                             }
                             if (value == "password") {
                               Get.to(() => ChangePasswordPage());
@@ -127,7 +132,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: 5),
                   Container(
                     decoration: BoxDecoration(
-                      //  gradient: goldGradient,
                       borderRadius: BorderRadius.circular(isTablet ? 20 : 14),
                     ),
                     padding: EdgeInsets.all(isTablet ? 10 : 5),
@@ -135,9 +139,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: avatarSize / 2,
-                          backgroundImage: NetworkImage(
-                            "https://avatars.githubusercontent.com/u/583231?v=4",
-                          ),
+                          backgroundColor: Colors.amber.shade700,
+                          backgroundImage:
+                              (user?.avatarUrl != null &&
+                                  user!.avatarUrl.isNotEmpty)
+                              ? NetworkImage(user!.avatarUrl!)
+                              : null,
+                          child:
+                              (user?.avatarUrl == null ||
+                                  user!.avatarUrl.isEmpty)
+                              ? Text(
+                                  (user?.name != null && user!.name.isNotEmpty)
+                                      ? user!.name[0].toUpperCase()
+                                      : "?",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: avatarSize / 2.2,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              : null,
                         ),
                         SizedBox(width: isTablet ? 16 : 12),
                         Column(
@@ -158,24 +179,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 fontSize: subtitleSize,
                               ),
                             ),
-                            SizedBox(height: 6),
-                            // Container(
-                            //   padding: EdgeInsets.symmetric(
-                            //     horizontal: isTablet ? 12 : 10,
-                            //     vertical: isTablet ? 6 : 4,
-                            //   ),
-                            //   decoration: BoxDecoration(
-                            //     color: Colors.black.withOpacity(0.25),
-                            //     borderRadius: BorderRadius.circular(12),
-                            //   ),
-                            //   child: Text(
-                            //     "Premium Member",
-                            //     style: TextStyle(
-                            //       color: Colors.amber,
-                            //       fontSize: subtitleSize,
-                            //     ),
-                            //   ),
-                            // ),
                           ],
                         ),
                       ],

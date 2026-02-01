@@ -84,39 +84,30 @@ class _SignInScreenState extends State<SignInScreen> {
               children: [
                 // Logo Circle
                 Container(
-                  height: 90,
-                  width: 90,
+                  height: 120,
+                  width: 150,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFFD4AF37), // Gold circle
+                    // color: Color.fromARGB(255, 20, 3, 3), // Gold circle
                   ),
-                  child: Center(
-                    child: Text(
-                      'K',
-                      style: GoogleFonts.poppins(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2B352C),
-                      ),
-                    ),
+                  child: Image.asset(
+                    'assets/images/app_logo_k.png',
+                    fit: BoxFit.fill,
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
                 // Title
-                Text(
-                  'KLEKTION',
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFD4AF37),
-                    letterSpacing: 1,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
+                // Text(
+                //   'KLEKTION',
+                //   style: GoogleFonts.playfairDisplay(
+                //     fontSize: 28,
+                //     fontWeight: FontWeight.bold,
+                //     color: const Color(0xFFD4AF37),
+                //     letterSpacing: 1,
+                //   ),
+                // ),
                 Text(
                   'The collection vault',
                   style: GoogleFonts.poppins(

@@ -2,6 +2,7 @@ class UserModel {
   final String userId;
   final String userTypeId;
   final String name;
+  final String userName;
   final String email;
   final String passwordHash;
   final String mobile;
@@ -17,6 +18,7 @@ class UserModel {
     required this.userId,
     required this.userTypeId,
     required this.name,
+    required this.userName,
     required this.email,
     required this.passwordHash,
     required this.mobile,
@@ -35,6 +37,7 @@ class UserModel {
       userId: json['user_id'] ?? '',
       userTypeId: json['user_type_id'] ?? '',
       name: json['name'] ?? '',
+      userName: json['user_name'],
       email: json['email'] ?? '',
       passwordHash: json['password_hash'] ?? '',
       mobile: json['mobile'] ?? '',
@@ -54,6 +57,7 @@ class UserModel {
     return {
       'user_id': userId,
       'user_type_id': userTypeId,
+      'user_name': userName,
       'name': name,
       'email': email,
       'password_hash': passwordHash,
@@ -72,6 +76,7 @@ class UserModel {
   UserModel copyWith({
     String? userId,
     String? userTypeId,
+    String? userName,
     String? name,
     String? email,
     String? passwordHash,
@@ -88,6 +93,7 @@ class UserModel {
       userId: userId ?? this.userId,
       userTypeId: userTypeId ?? this.userTypeId,
       name: name ?? this.name,
+      userName: userName ?? this.userName,
       email: email ?? this.email,
       passwordHash: passwordHash ?? this.passwordHash,
       mobile: mobile ?? this.mobile,

@@ -34,7 +34,7 @@ class DiscoverController extends GetxController {
           .from("collections")
           .select("*, collection_images(image_url)")
           .eq("is_deleted", false) // 🔥 ADD THIS LINE
-          .limit(30);
+          .limit(100);
 
       trendingCollections.value = response;
     } catch (e) {

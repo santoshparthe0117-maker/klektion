@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Text(
                                 "My Collection",
-                                style: GoogleFonts.playfairDisplay(
+                                style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.primaryColor,
@@ -386,6 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       50,
                                       double.infinity,
                                     ),
+
                                     ShimmerDesign().horizontalcontainer(
                                       50,
                                       double.infinity,
@@ -436,11 +437,14 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   backgroundColor: AppColors.accent,
-      //   onPressed: () {},
-      //   child: const Icon(Icons.add, color: Colors.black),
-      // ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.accent,
+        onPressed: () async {
+          await Get.to(AddItemScreen());
+          itemController.getRecentItems();
+        },
+        child: const Icon(Icons.add, color: Colors.black),
+      ),
     );
   }
 

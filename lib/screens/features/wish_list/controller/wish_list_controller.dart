@@ -22,17 +22,18 @@ class WishlistController extends GetxController {
       final response = await supabase
           .from('wishlist')
           .select('''
-          item:items(
-            *,
-            item_images(image_url),
-            likes(count),
-            liked_by:likes(user_id),
-            wishlist(count),
-            wishlisted_by:wishlist(user_id)
-          )
-        ''')
+      item:items!inner(
+        *,
+        item_images(image_url),
+        likes(count),
+        liked_by:likes(user_id),
+        wishlist(count),
+        wishlisted_by:wishlist(user_id)
+      )
+    ''')
           .eq('user_id', userId)
-          .eq('items.is_deleted', false); // 🔥 added filter here
+          .eq('items.is_deleted', false);
+      // ✅ CORRECT FILTER
 
       wishlistItems.value = response
           .map<ItemModel>((e) => ItemModel.fromJson(e['item']))
@@ -109,7 +110,7 @@ class WishlistController extends GetxController {
       final response = await supabase
           .from('wishlist')
           .select('''
-            item:items(
+            item:items!inner(
               *,
               item_images(image_url),
               likes(count),
@@ -118,7 +119,8 @@ class WishlistController extends GetxController {
               wishlisted_by:wishlist(user_id)
             )
         ''')
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .eq('items.is_deleted', false);
 
       // ✅ Convert to ItemModel list
       final items = response

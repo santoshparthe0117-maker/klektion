@@ -31,6 +31,7 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
   final goldGradient = const LinearGradient(
     colors: [Color(0xFFB08A0B), Color(0xFFD4AF37), Color(0xFFFFE29F)],
   );
+  final collectionController = Get.find<CollectionController>();
 
   double totalValue = 0.0;
   double totalPurchase = 0.0;
@@ -131,11 +132,10 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                         color: AppColors.primaryColor,
                       ),
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: "edit",
-                          child: Text("Edit Item"),
-                        ),
-
+                        // const PopupMenuItem(
+                        //   value: "edit",
+                        //   child: Text("Edit Item"),
+                        // ),
                         PopupMenuItem(
                           value: "delete",
                           onTap: () async {
@@ -324,19 +324,17 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
                 // Close the dialog first
                 Get.back();
 
-                final controller = Get.find<CollectionController>();
-
-                final ok = await controller.deleteCollection(
+                final ok = await collectionController.deleteCollection(
                   widget.collection.collectionId,
                 );
 
                 if (ok) {
-                  Get.snackbar(
-                    "Deleted",
-                    "Collection removed successfully",
-                    backgroundColor: Colors.redAccent,
-                    colorText: Colors.white,
-                  );
+                  // Get.snackbar(
+                  //   "Deleted",
+                  //   "Collection removed successfully",
+                  //   backgroundColor: Colors.redAccent,
+                  //   colorText: Colors.white,
+                  // );
 
                   /// 🔥 Important!
                   /// Close the current CollectionDetailsScreen and return to previous list screen.
@@ -525,5 +523,11 @@ class _CollectionDetailsScreenState extends State<CollectionDetailsScreen> {
 
   String _formatDate(DateTime date) {
     return "${date.day}-${date.month}-${date.year}";
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
   }
 }

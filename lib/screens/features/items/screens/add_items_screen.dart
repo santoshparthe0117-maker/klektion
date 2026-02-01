@@ -41,6 +41,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final TextEditingController descCtrl = TextEditingController();
   final TextEditingController priceCtrl = TextEditingController();
   final TextEditingController valueCtrl = TextEditingController();
+  final TextEditingController locationCtrl = TextEditingController();
 
   // dropdown selected ids (use String ids to avoid Dropdown duplicate/value issues)
   String? selectedCategoryId;
@@ -101,6 +102,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       selectedPrivacy = item.visibility ?? 'private';
       // keep old images as URL list
       oldImageUrls = List<String>.from(item.images);
+      currentLatitude = double.parse(item.latitude ?? '0.0');
     }
     if (widget.collectionId != null) {
       setState(() {
@@ -242,7 +244,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       onChanged: (v) =>
                           setState(() => selectedCollectionId = v),
                     ),
-                    _currencyField("Purchase Price", priceCtrl),
+                    _currencyField("Initial Value", priceCtrl),
                     _currencyField("Current Value", valueCtrl),
                     _dropdownWithId(
                       label: "Privacy",
@@ -268,51 +270,64 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       style: const TextStyle(color: Colors.white),
                     ),
                     const SizedBox(height: 10),
-                    Container(
-                      padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              currentAddress == null
-                                  ? "Location not added"
-                                  : "Location: $currentAddress",
-                              style: const TextStyle(
-                                color: Colors.white70,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: locationCtrl,
+                            style: const TextStyle(color: Colors.white),
+                            cursorColor: Colors.white,
+                            decoration: const InputDecoration(
+                              hintText: "Paste location link",
+                              hintStyle: TextStyle(
+                                color: Colors.white54,
                                 fontSize: 13,
                               ),
+                              border: InputBorder.none,
+
+                              // 🔥 Make background transparent
+                              filled: true,
+                              fillColor: Colors.transparent,
                             ),
                           ),
+                        ),
 
-                          const SizedBox(width: 10),
+                        // Expanded(
+                        //   child: Text(
+                        //     currentAddress == null
+                        //         ? "Location not added"
+                        //         : "Location: $currentAddress",
+                        //     style: const TextStyle(
+                        //       color: Colors.white70,
+                        //       fontSize: 13,
+                        //     ),
+                        //   ),
+                        // ),
 
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryColor,
-                            ),
-                            onPressed: isGettingLocation
-                                ? null
-                                : _getCurrentLocation,
-                            child: isGettingLocation
-                                ? const SizedBox(
-                                    height: 18,
-                                    width: 18,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    "  Add Location  ",
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                          ),
-                        ],
-                      ),
+                        // const SizedBox(width: 10),
+
+                        // ElevatedButton(
+                        //   style: ElevatedButton.styleFrom(
+                        //     backgroundColor: AppColors.primaryColor,
+                        //   ),
+                        //   onPressed: isGettingLocation
+                        //       ? null
+                        //       : _getCurrentLocation,
+                        //   child: isGettingLocation
+                        //       ? const SizedBox(
+                        //           height: 18,
+                        //           width: 18,
+                        //           child: CircularProgressIndicator(
+                        //             color: Colors.white,
+                        //             strokeWidth: 2,
+                        //           ),
+                        //         )
+                        //       : const Text(
+                        //           "  Add Location  ",
+                        //           style: TextStyle(color: Colors.white),
+                        //         ),
+                        // ),
+                      ],
                     ),
                     const SizedBox(height: 18),
 
@@ -771,6 +786,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       final visibility = selectedPrivacy.toLowerCase();
       final categoryId = selectedCategoryId;
       final collectionId = selectedCollectionId;
+      currentAddress = locationCtrl.text.trim();
 
       // Combine old + newly uploaded urls
       final finalImageList = [...oldImageUrls, ...uploadedUrls];
@@ -791,6 +807,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
           condition: null,
           imageUrls: finalImageList,
           shortDesciption: shortDesc,
+          currentLatitude: currentLatitude?.toString(),
+          currentLongitude: currentLongitude?.toString(),
+          currentAddress: currentAddress,
         );
 
         if (success) {

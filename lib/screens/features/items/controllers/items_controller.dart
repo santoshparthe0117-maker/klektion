@@ -47,7 +47,7 @@ class ItemController extends GetxController {
           .eq('is_deleted', false) // optional: only active categories
           .order('created_at', ascending: true);
 
-      if (response != null && response.isNotEmpty) {
+      if (response.isNotEmpty) {
         // Map the Supabase data to your CategoryModel
         categories.value = response;
       } else {
@@ -371,6 +371,9 @@ class ItemController extends GetxController {
     DateTime? acquisitionDate,
     String? condition,
     required List<String> imageUrls,
+    required String? currentLatitude,
+    required String? currentLongitude,
+    required String? currentAddress,
   }) async {
     try {
       isLoading.value = true;
@@ -397,6 +400,9 @@ class ItemController extends GetxController {
         'is_deleted': false,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
+        'latitude': currentLatitude,
+        'longitude': currentLongitude,
+        'address': currentAddress,
       };
 
       // ✅ Insert & get returned row

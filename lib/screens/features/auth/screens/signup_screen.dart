@@ -6,7 +6,6 @@ import '../../../../controllers/auth_controller.dart';
 import '../../../../utils/color_constants.dart';
 import '../../../../utils/validators.dart';
 import '../../../../utils/constants.dart';
-import 'add_vendor_details.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,11 +16,13 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _firstnameController = TextEditingController();
+  final _lastnameController = TextEditingController();
   final _mobileController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _userNameUserController = TextEditingController();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -30,7 +31,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _firstnameController.dispose();
+    _lastnameController.dispose();
     _mobileController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -53,7 +55,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final authController = Get.find<AuthController>();
 
     final success = await authController.signUp(
-      username: _usernameController.text.trim(),
+      userNameUser: _userNameUserController.text,
+      username:
+          "${_firstnameController.text.trim()} ${_lastnameController.text}",
       password: _passwordController.text,
       email: _emailController.text.trim().isEmpty
           ? null
@@ -100,16 +104,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 30),
 
               // Logo
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: themeGold,
-                child: Text(
-                  "K",
-                  style: GoogleFonts.playfairDisplay(
-                    color: bgGreen,
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                  ),
+              Container(
+                height: 120,
+                width: 150,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  // color: Color.fromARGB(255, 20, 3, 3), // Gold circle
+                ),
+                child: Image.asset(
+                  'assets/images/app_logo_k.png',
+                  fit: BoxFit.fill,
                 ),
               ),
               const SizedBox(height: 20),
@@ -144,11 +148,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: Column(
                     children: [
                       _buildField(
-                        controller: _usernameController,
-                        label: "Full Name",
+                        controller: _userNameUserController,
+                        label: "User Name",
                         icon: Icons.person_outline,
                         validator: Validators.validateUsername,
-                        hint: "Enter your name",
+                        hint: "Enter your user name",
+                      ),
+                      const SizedBox(height: 16),
+                      _buildField(
+                        controller: _firstnameController,
+                        label: "First Name",
+                        icon: Icons.person_outline,
+                        validator: Validators.validateUsername,
+                        hint: "Enter your first name",
+                      ),
+                      const SizedBox(height: 16),
+                      _buildField(
+                        controller: _lastnameController,
+                        label: "Last Name",
+                        icon: Icons.person_outline,
+                        validator: Validators.validateUsername,
+                        hint: "Enter your last name",
                       ),
                       const SizedBox(height: 16),
                       _buildField(
