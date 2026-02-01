@@ -151,14 +151,26 @@ class _SplashScreenState extends State<SplashScreen>
                 // App Name
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: Text(
-                    AppConstants.appName,
-                    style: GoogleFonts.poppins(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  child: Container(
+                    height: 120,
+                    width: 150,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      // color: Color.fromARGB(255, 20, 3, 3), // Gold circle
+                    ),
+                    child: Image.asset(
+                      'assets/images/app_logo_k.png',
+                      fit: BoxFit.fill,
                     ),
                   ),
+                  // Text(
+                  //   AppConstants.appName,
+                  //   style: GoogleFonts.poppins(
+                  //     fontSize: 32,
+                  //     fontWeight: FontWeight.bold,
+                  //     color: Colors.white,
+                  //   ),
+                  // ),
                 ),
 
                 const SizedBox(height: 10),
